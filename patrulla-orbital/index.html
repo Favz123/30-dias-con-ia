@@ -1,0 +1,168 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Patrulla Orbital</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Chakra+Petch:wght@400;600&display=swap">
+<style>
+/* Layout: one arcade screen centered, HUD strip above the canvas, touch pad below on phones. Single deliberate dark look. */
+:root {
+  --space: #070b1a; --panel: #0e1530; --ink: #e8ecff; --dim: #8a93c2;
+  --ship: #4fe3c1; --enemy: #ff6b8b; --gold: #ffd166;
+  --display: "Press Start 2P", ui-monospace, monospace;
+  --body: "Chakra Petch", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--space); color: var(--ink); font-family: var(--body); padding-inline: 16px; padding-block: 12px; box-sizing: border-box; }
+.wrap { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+h1 { font-family: var(--display); font-size: 14px; letter-spacing: .08em; color: var(--ship); margin: 0; text-wrap: balance; }
+.hud { display: flex; justify-content: space-between; font-family: var(--display); font-size: 10px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.hud b { color: var(--ink); font-weight: 400; }
+canvas { width: 100%; aspect-ratio: 3 / 4; max-width: 100%; background: var(--panel); border-radius: 6px; display: block; touch-action: none; }
+.help { color: var(--dim); font-size: 14px; margin: 0; }
+.pad { display: none; gap: 10px; }
+.pad button { flex: 1; font-family: var(--display); font-size: 12px; padding: 16px 0; background: var(--panel); color: var(--ink); border: 1px solid #26305e; border-radius: 6px; touch-action: none; user-select: none; }
+.pad button:active { background: #1a2450; }
+.pad button:focus-visible, canvas:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+@media (hover: none) { .pad { display: flex; } }
+</style>
+
+<div class="wrap">
+  <h1>PATRULLA ORBITAL</h1>
+  <div class="hud"><span>PUNTOS <b id="score">0</b></span><span>NIVEL <b id="level">1</b></span><span>VIDAS <b id="lives">3</b></span><span>RÉCORD <b id="best">0</b></span></div>
+  <canvas id="c" width="480" height="640" tabindex="0" aria-label="Juego de naves"></canvas>
+  <div class="pad">
+    <button id="bl" aria-label="Izquierda">◀</button>
+    <button id="bf" aria-label="Disparar">FUEGO</button>
+    <button id="br" aria-label="Derecha">▶</button>
+  </div>
+  <p class="help">Flechas o A/D para moverte, Espacio para disparar, P para pausa. Cada 10 enemigos sube el nivel. Recoge las estrellas doradas para disparo triple.</p>
+</div>
+
+<script>
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+const $ = id => document.getElementById(id);
+let best = 0; try { best = +localStorage.getItem('po-best') || 0; } catch (e) {}
+$('best').textContent = best;
+
+const keys = {};
+let state, stars = Array.from({ length: 80 }, () => ({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 2 + .5 }));
+
+function reset() {
+  state = { ship: { x: W / 2, y: H - 60, cd: 0, triple: 0, inv: 0 }, shots: [], foes: [], bonus: [], sparks: [],
+    score: 0, lives: 3, level: 1, kills: 0, spawn: 0, mode: 'title', t: 0 };
+  hud();
+}
+function hud() { $('score').textContent = state.score; $('level').textContent = state.level; $('lives').textContent = state.lives; $('best').textContent = best; }
+
+function fire() {
+  const s = state.ship; if (s.cd > 0) return;
+  const angles = s.triple > 0 ? [-.25, 0, .25] : [0];
+  angles.forEach(a => state.shots.push({ x: s.x, y: s.y - 18, vx: Math.sin(a) * 7, vy: -9 }));
+  s.cd = 12;
+}
+function boom(x, y, color, n = 14) {
+  for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, v = Math.random() * 3 + 1; state.sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 30, color }); }
+}
+
+function update() {
+  const st = state; st.t++;
+  stars.forEach(p => { p.y += p.s * (st.mode === 'play' ? 1.5 : .5); if (p.y > H) { p.y = 0; p.x = Math.random() * W; } });
+  if (st.mode !== 'play') return;
+  const s = st.ship;
+  if (keys.left) s.x -= 5; if (keys.right) s.x += 5;
+  s.x = Math.max(20, Math.min(W - 20, s.x));
+  if (keys.fire) fire();
+  s.cd--; s.triple--; s.inv--;
+
+  if (--st.spawn <= 0) {
+    const kind = Math.random() < .2 + st.level * .03 ? 'zig' : 'drop';
+    st.foes.push({ x: 30 + Math.random() * (W - 60), y: -20, vy: 1.5 + st.level * .35 + Math.random(), kind, ph: Math.random() * 6, hp: kind === 'zig' ? 2 : 1 });
+    st.spawn = Math.max(14, 50 - st.level * 4);
+  }
+  if (Math.random() < .003) st.bonus.push({ x: 30 + Math.random() * (W - 60), y: -10 });
+
+  st.shots.forEach(b => { b.x += b.vx; b.y += b.vy; });
+  st.shots = st.shots.filter(b => b.y > -10 && b.x > -10 && b.x < W + 10);
+  st.foes.forEach(f => { f.y += f.vy; if (f.kind === 'zig') f.x += Math.sin(st.t / 15 + f.ph) * 2.5; });
+  st.bonus.forEach(b => b.y += 2);
+
+  for (const f of st.foes) {
+    for (const b of st.shots) if (!b.hit && Math.hypot(f.x - b.x, f.y - b.y) < 18) {
+      b.hit = true; f.hp--;
+      if (f.hp <= 0) { f.dead = true; st.score += f.kind === 'zig' ? 25 : 10; st.kills++; boom(f.x, f.y, '#ff6b8b');
+        if (st.kills % 10 === 0) st.level++; }
+    }
+    if (!f.dead && s.inv <= 0 && Math.hypot(f.x - s.x, f.y - s.y) < 24) {
+      f.dead = true; st.lives--; s.inv = 90; boom(s.x, s.y, '#4fe3c1', 24);
+      if (st.lives <= 0) gameOver();
+    }
+    if (f.y > H + 20) { f.dead = true; st.score = Math.max(0, st.score - 5); }
+  }
+  for (const b of st.bonus) if (Math.hypot(b.x - s.x, b.y - s.y) < 26) { b.got = true; s.triple = 600; boom(b.x, b.y, '#ffd166', 10); }
+  st.shots = st.shots.filter(b => !b.hit);
+  st.foes = st.foes.filter(f => !f.dead);
+  st.bonus = st.bonus.filter(b => !b.got && b.y < H + 10);
+  st.sparks.forEach(p => { p.x += p.vx; p.y += p.vy; p.life--; });
+  st.sparks = st.sparks.filter(p => p.life > 0);
+  hud();
+}
+
+function gameOver() {
+  state.mode = 'over';
+  if (state.score > best) { best = state.score; try { localStorage.setItem('po-best', best); } catch (e) {} }
+}
+
+function drawShip(x, y) {
+  ctx.fillStyle = '#4fe3c1';
+  ctx.beginPath(); ctx.moveTo(x, y - 20); ctx.lineTo(x + 16, y + 14); ctx.lineTo(x, y + 6); ctx.lineTo(x - 16, y + 14); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#ffd166'; ctx.fillRect(x - 3, y + 8 + Math.random() * 3, 6, 6);
+}
+function drawFoe(f) {
+  ctx.fillStyle = f.kind === 'zig' ? '#c77dff' : '#ff6b8b';
+  ctx.beginPath(); ctx.moveTo(f.x, f.y + 14); ctx.lineTo(f.x + 14, f.y - 10); ctx.lineTo(f.x, f.y - 4); ctx.lineTo(f.x - 14, f.y - 10); ctx.closePath(); ctx.fill();
+}
+function text(t, y, size, color = '#e8ecff') {
+  ctx.fillStyle = color; ctx.font = `${size}px "Press Start 2P", monospace`; ctx.textAlign = 'center'; ctx.fillText(t, W / 2, y);
+}
+
+function draw() {
+  const st = state;
+  ctx.fillStyle = '#0e1530'; ctx.fillRect(0, 0, W, H);
+  stars.forEach(p => { ctx.fillStyle = `rgba(232,236,255,${p.s / 3})`; ctx.fillRect(p.x, p.y, p.s, p.s); });
+  st.bonus.forEach(b => { ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(b.x, b.y, 8 + Math.sin(st.t / 6) * 2, 0, 6.28); ctx.fill(); });
+  ctx.fillStyle = '#ffd166'; st.shots.forEach(b => ctx.fillRect(b.x - 2, b.y - 8, 4, 12));
+  st.foes.forEach(drawFoe);
+  st.sparks.forEach(p => { ctx.globalAlpha = p.life / 30; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 3, 3); });
+  ctx.globalAlpha = 1;
+  if (st.mode !== 'title' && (st.ship.inv <= 0 || st.t % 10 < 5)) drawShip(st.ship.x, st.ship.y);
+  if (st.ship.triple > 0 && st.mode === 'play') text('DISPARO TRIPLE', 30, 10, '#ffd166');
+  if (st.mode === 'title') { drawShip(W / 2, H / 2 + 60); text('PATRULLA', H / 2 - 70, 26, '#4fe3c1'); text('ORBITAL', H / 2 - 30, 26, '#4fe3c1'); text('ESPACIO O TOCA PARA EMPEZAR', H / 2 + 130, 10); }
+  if (st.mode === 'pause') text('PAUSA', H / 2, 22);
+  if (st.mode === 'over') { text('FIN DEL JUEGO', H / 2 - 30, 20, '#ff6b8b'); text(`PUNTOS ${st.score}`, H / 2 + 10, 12); text('ESPACIO O TOCA PARA REINTENTAR', H / 2 + 50, 10); }
+}
+
+function start() { if (state.mode === 'title' || state.mode === 'over') { reset(); state.mode = 'play'; } }
+const map = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right', ' ': 'fire' };
+addEventListener('keydown', e => {
+  if (map[e.key]) { keys[map[e.key]] = true; e.preventDefault(); }
+  if (e.key === ' ') start();
+  if ((e.key === 'p' || e.key === 'P') && (state.mode === 'play' || state.mode === 'pause')) state.mode = state.mode === 'play' ? 'pause' : 'play';
+});
+addEventListener('keyup', e => { if (map[e.key]) keys[map[e.key]] = false; });
+cv.addEventListener('pointerdown', e => {
+  start();
+  const r = cv.getBoundingClientRect(); state.ship.x = (e.clientX - r.left) / r.width * W; keys.fire = true;
+});
+cv.addEventListener('pointermove', e => { if (e.buttons && state.mode === 'play') { const r = cv.getBoundingClientRect(); state.ship.x = (e.clientX - r.left) / r.width * W; } });
+addEventListener('pointerup', () => keys.fire = false);
+[['bl', 'left'], ['br', 'right'], ['bf', 'fire']].forEach(([id, k]) => {
+  const b = $(id);
+  b.addEventListener('pointerdown', e => { e.preventDefault(); start(); keys[k] = true; });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => keys[k] = false));
+});
+
+reset();
+(function loop() { update(); draw(); requestAnimationFrame(loop); })();
+</script>
+
+</body></html>

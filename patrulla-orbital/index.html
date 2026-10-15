@@ -22,19 +22,23 @@ canvas { width: 100%; aspect-ratio: 3 / 4; max-width: 100%; background: var(--pa
 .pad button { flex: 1; font-family: var(--display); font-size: 12px; padding: 16px 0; background: var(--panel); color: var(--ink); border: 1px solid #26305e; border-radius: 6px; touch-action: none; user-select: none; }
 .pad button:active { background: #1a2450; }
 .pad button:focus-visible, canvas:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.snd { align-self: flex-end; font-family: var(--display); font-size: 10px; padding: 8px 10px; background: var(--panel); color: var(--dim); border: 1px solid #26305e; border-radius: 6px; cursor: pointer; }
+.snd[aria-pressed="true"] { color: var(--gold); border-color: var(--gold); }
+.snd:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 @media (hover: none) { .pad { display: flex; } }
 </style>
 
 <div class="wrap">
   <h1>PATRULLA ORBITAL</h1>
-  <div class="hud"><span>PUNTOS <b id="score">0</b></span><span>NIVEL <b id="level">1</b></span><span>VIDAS <b id="lives">3</b></span><span>RÉCORD <b id="best">0</b></span></div>
+  <div class="hud"><span>PUNTOS <b id="score">0</b></span><span>NIVEL <b id="level">1</b></span><span>VIDAS <b id="lives">3</b></span><span>RECORD <b id="best">0</b></span></div>
+  <button id="snd" class="snd" type="button" aria-pressed="false">SONIDO: NO</button>
   <canvas id="c" width="480" height="640" tabindex="0" aria-label="Juego de naves"></canvas>
   <div class="pad">
     <button id="bl" aria-label="Izquierda">◀</button>
     <button id="bf" aria-label="Disparar">FUEGO</button>
     <button id="br" aria-label="Derecha">▶</button>
   </div>
-  <p class="help">Flechas o A/D para moverte, Espacio para disparar, P para pausa. Cada 10 enemigos sube el nivel. Recoge las estrellas doradas para disparo triple.</p>
+  <p class="help">Flechas o A/D para moverte, Espacio para disparar, P para pausa. M activa el sonido. Cada 10 enemigos sube el nivel y cada 5 niveles aparece un jefe: derrótalo para ganar una vida. Recoge las estrellas doradas para disparo triple.</p>
 </div>
 
 <script>
@@ -44,11 +48,34 @@ const $ = id => document.getElementById(id);
 let best = 0; try { best = +localStorage.getItem('po-best') || 0; } catch (e) {}
 $('best').textContent = best;
 
+// Efectos de sonido sintetizados con Web Audio (sin archivos externos)
+let audio = null, soundOn = false;
+const SFX = {
+  shoot: [880, 220, .08, 'square', .04], hit: [300, 150, .06, 'square', .05], boom: [160, 40, .35, 'sawtooth', .1],
+  power: [440, 1320, .25, 'triangle', .08], boss: [200, 120, .12, 'sawtooth', .04], alarm: [520, 260, .6, 'square', .06],
+};
+function sfx(kind) {
+  if (!soundOn || !audio) return;
+  const [f0, f1, d, type, vol] = SFX[kind], t = audio.currentTime;
+  const o = audio.createOscillator(), g = audio.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + d);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+  o.connect(g).connect(audio.destination); o.start(t); o.stop(t + d);
+}
+function toggleSound() {
+  soundOn = !soundOn;
+  if (soundOn && !audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { soundOn = false; } }
+  if (audio && audio.state === 'suspended') audio.resume();
+  $('snd').textContent = soundOn ? 'SONIDO: SI' : 'SONIDO: NO';
+  $('snd').setAttribute('aria-pressed', soundOn);
+}
+$('snd').addEventListener('click', toggleSound);
+
 const keys = {};
 let state, stars = Array.from({ length: 80 }, () => ({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 2 + .5 }));
 
 function reset() {
-  state = { ship: { x: W / 2, y: H - 60, cd: 0, triple: 0, inv: 0 }, shots: [], foes: [], bonus: [], sparks: [],
+  state = { ship: { x: W / 2, y: H - 60, cd: 0, triple: 0, inv: 0 }, shots: [], foes: [], bonus: [], sparks: [], ebul: [], boss: null, banner: null,
     score: 0, lives: 3, level: 1, kills: 0, spawn: 0, mode: 'title', t: 0 };
   hud();
 }
@@ -58,10 +85,23 @@ function fire() {
   const s = state.ship; if (s.cd > 0) return;
   const angles = s.triple > 0 ? [-.25, 0, .25] : [0];
   angles.forEach(a => state.shots.push({ x: s.x, y: s.y - 18, vx: Math.sin(a) * 7, vy: -9 }));
-  s.cd = 12;
+  s.cd = 12; sfx('shoot');
 }
 function boom(x, y, color, n = 14) {
   for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, v = Math.random() * 3 + 1; state.sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 30, color }); }
+}
+
+function spawnBoss() {
+  const lvl = state.level;
+  state.boss = { x: W / 2, y: -60, vx: 1.5 + lvl * .1, hp: 30 + lvl * 4, max: 30 + lvl * 4, cd: 80 };
+  state.foes = [];
+  state.banner = { text: 'ALERTA: JEFE', t: 120 };
+  sfx('alarm');
+}
+function hurt() {
+  const st = state, s = st.ship;
+  st.lives--; s.inv = 90; boom(s.x, s.y, '#4fe3c1', 24); sfx('boom');
+  if (st.lives <= 0) gameOver();
 }
 
 function update() {
@@ -74,7 +114,7 @@ function update() {
   if (keys.fire) fire();
   s.cd--; s.triple--; s.inv--;
 
-  if (--st.spawn <= 0) {
+  if (!st.boss && --st.spawn <= 0) {
     const kind = Math.random() < .2 + st.level * .03 ? 'zig' : 'drop';
     st.foes.push({ x: 30 + Math.random() * (W - 60), y: -20, vy: 1.5 + st.level * .35 + Math.random(), kind, ph: Math.random() * 6, hp: kind === 'zig' ? 2 : 1 });
     st.spawn = Math.max(14, 50 - st.level * 4);
@@ -90,15 +130,36 @@ function update() {
     for (const b of st.shots) if (!b.hit && Math.hypot(f.x - b.x, f.y - b.y) < 18) {
       b.hit = true; f.hp--;
       if (f.hp <= 0) { f.dead = true; st.score += f.kind === 'zig' ? 25 : 10; st.kills++; boom(f.x, f.y, '#ff6b8b');
-        if (st.kills % 10 === 0) st.level++; }
+        sfx('hit');
+        if (st.kills % 10 === 0) { st.level++; if (st.level % 5 === 0) spawnBoss(); } }
     }
     if (!f.dead && s.inv <= 0 && Math.hypot(f.x - s.x, f.y - s.y) < 24) {
-      f.dead = true; st.lives--; s.inv = 90; boom(s.x, s.y, '#4fe3c1', 24);
-      if (st.lives <= 0) gameOver();
+      f.dead = true; hurt();
     }
     if (f.y > H + 20) { f.dead = true; st.score = Math.max(0, st.score - 5); }
   }
-  for (const b of st.bonus) if (Math.hypot(b.x - s.x, b.y - s.y) < 26) { b.got = true; s.triple = 600; boom(b.x, b.y, '#ffd166', 10); }
+  for (const b of st.bonus) if (Math.hypot(b.x - s.x, b.y - s.y) < 26) { b.got = true; s.triple = 600; boom(b.x, b.y, '#ffd166', 10); sfx('power'); }
+
+  // Jefe: entra, se mueve de lado a lado y dispara hacia la nave
+  const B = st.boss;
+  if (B) {
+    B.y = Math.min(90, B.y + 1);
+    B.x += B.vx; if (B.x < 60 || B.x > W - 60) B.vx *= -1;
+    if (B.y >= 90 && --B.cd <= 0) {
+      const a = Math.atan2(s.y - B.y, s.x - B.x);
+      for (const off of st.level >= 10 ? [-.2, 0, .2] : [0]) st.ebul.push({ x: B.x, y: B.y + 30, vx: Math.cos(a + off) * 4, vy: Math.sin(a + off) * 4 });
+      B.cd = Math.max(25, 70 - st.level * 3); sfx('boss');
+    }
+    for (const b of st.shots) if (!b.hit && Math.abs(b.x - B.x) < 50 && Math.abs(b.y - B.y) < 28) { b.hit = true; B.hp--; boom(b.x, b.y, '#ffd166', 3); }
+    if (B.hp <= 0) {
+      st.score += 500; st.lives++; boom(B.x, B.y, '#c77dff', 60); sfx('boom');
+      st.boss = null; st.ebul = []; st.banner = { text: 'JEFE DERROTADO +1 VIDA', t: 120 };
+    }
+  }
+  st.ebul.forEach(e => { e.x += e.vx; e.y += e.vy; });
+  for (const e of st.ebul) if (s.inv <= 0 && st.mode === 'play' && Math.hypot(e.x - s.x, e.y - s.y) < 14) { e.hit = true; hurt(); }
+  st.ebul = st.ebul.filter(e => !e.hit && e.y < H + 10 && e.y > -40 && e.x > -10 && e.x < W + 10);
+  if (st.banner && --st.banner.t <= 0) st.banner = null;
   st.shots = st.shots.filter(b => !b.hit);
   st.foes = st.foes.filter(f => !f.dead);
   st.bonus = st.bonus.filter(b => !b.got && b.y < H + 10);
@@ -121,6 +182,14 @@ function drawFoe(f) {
   ctx.fillStyle = f.kind === 'zig' ? '#c77dff' : '#ff6b8b';
   ctx.beginPath(); ctx.moveTo(f.x, f.y + 14); ctx.lineTo(f.x + 14, f.y - 10); ctx.lineTo(f.x, f.y - 4); ctx.lineTo(f.x - 14, f.y - 10); ctx.closePath(); ctx.fill();
 }
+function drawBoss(B) {
+  ctx.fillStyle = '#c77dff';
+  ctx.beginPath(); ctx.moveTo(B.x - 50, B.y - 20); ctx.lineTo(B.x + 50, B.y - 20); ctx.lineTo(B.x + 36, B.y + 10);
+  ctx.lineTo(B.x + 12, B.y + 30); ctx.lineTo(B.x - 12, B.y + 30); ctx.lineTo(B.x - 36, B.y + 10); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#ff6b8b'; ctx.fillRect(B.x - 6, B.y - 4, 12, 12);
+  ctx.fillStyle = '#26305e'; ctx.fillRect(40, 14, W - 80, 8);
+  ctx.fillStyle = '#c77dff'; ctx.fillRect(40, 14, (W - 80) * B.hp / B.max, 8);
+}
 function text(t, y, size, color = '#e8ecff') {
   ctx.fillStyle = color; ctx.font = `${size}px "Press Start 2P", monospace`; ctx.textAlign = 'center'; ctx.fillText(t, W / 2, y);
 }
@@ -132,10 +201,13 @@ function draw() {
   st.bonus.forEach(b => { ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(b.x, b.y, 8 + Math.sin(st.t / 6) * 2, 0, 6.28); ctx.fill(); });
   ctx.fillStyle = '#ffd166'; st.shots.forEach(b => ctx.fillRect(b.x - 2, b.y - 8, 4, 12));
   st.foes.forEach(drawFoe);
+  if (st.boss) drawBoss(st.boss);
+  ctx.fillStyle = '#ff6b8b'; st.ebul.forEach(e => { ctx.beginPath(); ctx.arc(e.x, e.y, 5, 0, 6.28); ctx.fill(); });
   st.sparks.forEach(p => { ctx.globalAlpha = p.life / 30; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 3, 3); });
   ctx.globalAlpha = 1;
   if (st.mode !== 'title' && (st.ship.inv <= 0 || st.t % 10 < 5)) drawShip(st.ship.x, st.ship.y);
-  if (st.ship.triple > 0 && st.mode === 'play') text('DISPARO TRIPLE', 30, 10, '#ffd166');
+  if (st.ship.triple > 0 && st.mode === 'play') text('DISPARO TRIPLE', 40, 10, '#ffd166');
+  if (st.banner && st.mode === 'play') text(st.banner.text, H / 2, 14, '#ffd166');
   if (st.mode === 'title') { drawShip(W / 2, H / 2 + 60); text('PATRULLA', H / 2 - 70, 26, '#4fe3c1'); text('ORBITAL', H / 2 - 30, 26, '#4fe3c1'); text('ESPACIO O TOCA PARA EMPEZAR', H / 2 + 130, 10); }
   if (st.mode === 'pause') text('PAUSA', H / 2, 22);
   if (st.mode === 'over') { text('FIN DEL JUEGO', H / 2 - 30, 20, '#ff6b8b'); text(`PUNTOS ${st.score}`, H / 2 + 10, 12); text('ESPACIO O TOCA PARA REINTENTAR', H / 2 + 50, 10); }
@@ -146,6 +218,7 @@ const map = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: '
 addEventListener('keydown', e => {
   if (map[e.key]) { keys[map[e.key]] = true; e.preventDefault(); }
   if (e.key === ' ') start();
+  if (e.key === 'm' || e.key === 'M') toggleSound();
   if ((e.key === 'p' || e.key === 'P') && (state.mode === 'play' || state.mode === 'pause')) state.mode = state.mode === 'play' ? 'pause' : 'play';
 });
 addEventListener('keyup', e => { if (map[e.key]) keys[map[e.key]] = false; });

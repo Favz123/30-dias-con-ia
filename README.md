@@ -8,6 +8,7 @@ Bitácora de mi plan de 30 días usando IA (Claude) para generar ingresos, busca
 | Proyecto | Descripción | Enlace |
 | --- | --- | --- |
 | Patrulla Orbital | Juego arcade de naves para navegador, hecho con IA: niveles, jefes finales cada 5 niveles, disparo triple y efectos de sonido. Funciona en computadora y celular. | [Jugar](https://favz123.github.io/30-dias-con-ia/patrulla-orbital/) · [Código](patrulla-orbital/index.html) |
+| Resumidor de PDFs | Script en Python que usa la API de Claude para resumir cualquier PDF en español: resumen, puntos clave y acciones sugeridas. | [Código](resumidor-pdf/) |
 
 ## Bitácora
 

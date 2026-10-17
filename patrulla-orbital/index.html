@@ -115,25 +115,31 @@ function update() {
   s.cd--; s.triple--; s.inv--;
 
   if (!st.boss && --st.spawn <= 0) {
-    const kind = Math.random() < .2 + st.level * .03 ? 'zig' : 'drop';
-    st.foes.push({ x: 30 + Math.random() * (W - 60), y: -20, vy: 1.5 + st.level * .35 + Math.random(), kind, ph: Math.random() * 6, hp: kind === 'zig' ? 2 : 1 });
+    if (st.level >= 3 && Math.random() < .15) {
+      // Tanque: grande, lento y resistente
+      st.foes.push({ x: 40 + Math.random() * (W - 80), y: -30, vy: .8 + st.level * .1, kind: 'tank', ph: 0, hp: 4, flash: 0 });
+    } else {
+      const kind = Math.random() < .2 + st.level * .03 ? 'zig' : 'drop';
+      st.foes.push({ x: 30 + Math.random() * (W - 60), y: -20, vy: 1.5 + st.level * .35 + Math.random(), kind, ph: Math.random() * 6, hp: kind === 'zig' ? 2 : 1 });
+    }
     st.spawn = Math.max(14, 50 - st.level * 4);
   }
   if (Math.random() < .003) st.bonus.push({ x: 30 + Math.random() * (W - 60), y: -10 });
 
   st.shots.forEach(b => { b.x += b.vx; b.y += b.vy; });
   st.shots = st.shots.filter(b => b.y > -10 && b.x > -10 && b.x < W + 10);
-  st.foes.forEach(f => { f.y += f.vy; if (f.kind === 'zig') f.x += Math.sin(st.t / 15 + f.ph) * 2.5; });
+  st.foes.forEach(f => { f.y += f.vy; if (f.flash) f.flash--; if (f.kind === 'zig') f.x += Math.sin(st.t / 15 + f.ph) * 2.5; });
   st.bonus.forEach(b => b.y += 2);
 
   for (const f of st.foes) {
-    for (const b of st.shots) if (!b.hit && Math.hypot(f.x - b.x, f.y - b.y) < 18) {
-      b.hit = true; f.hp--;
-      if (f.hp <= 0) { f.dead = true; st.score += f.kind === 'zig' ? 25 : 10; st.kills++; boom(f.x, f.y, '#ff6b8b');
+    const tank = f.kind === 'tank';
+    for (const b of st.shots) if (!b.hit && !f.dead && Math.hypot(f.x - b.x, f.y - b.y) < (tank ? 28 : 18)) {
+      b.hit = true; f.hp--; f.flash = 6;
+      if (f.hp <= 0) { f.dead = true; st.score += tank ? 50 : f.kind === 'zig' ? 25 : 10; st.kills++; boom(f.x, f.y, tank ? '#5ee06b' : '#ff6b8b', tank ? 24 : 14);
         sfx('hit');
         if (st.kills % 10 === 0) { st.level++; if (st.level % 5 === 0) spawnBoss(); } }
     }
-    if (!f.dead && s.inv <= 0 && Math.hypot(f.x - s.x, f.y - s.y) < 24) {
+    if (!f.dead && s.inv <= 0 && Math.hypot(f.x - s.x, f.y - s.y) < (tank ? 34 : 24)) {
       f.dead = true; hurt();
     }
     if (f.y > H + 20) { f.dead = true; st.score = Math.max(0, st.score - 5); }
@@ -179,6 +185,13 @@ function drawShip(x, y) {
   ctx.fillStyle = '#ffd166'; ctx.fillRect(x - 3, y + 8 + Math.random() * 3, 6, 6);
 }
 function drawFoe(f) {
+  if (f.kind === 'tank') {
+    ctx.fillStyle = f.flash % 2 ? '#ffffff' : '#5ee06b';
+    ctx.fillRect(f.x - 22, f.y - 16, 44, 26);
+    ctx.fillRect(f.x - 5, f.y + 10, 10, 12);
+    ctx.fillStyle = '#2f8a3a'; ctx.fillRect(f.x - 26, f.y - 18, 6, 30); ctx.fillRect(f.x + 20, f.y - 18, 6, 30);
+    return;
+  }
   ctx.fillStyle = f.kind === 'zig' ? '#c77dff' : '#ff6b8b';
   ctx.beginPath(); ctx.moveTo(f.x, f.y + 14); ctx.lineTo(f.x + 14, f.y - 10); ctx.lineTo(f.x, f.y - 4); ctx.lineTo(f.x - 14, f.y - 10); ctx.closePath(); ctx.fill();
 }

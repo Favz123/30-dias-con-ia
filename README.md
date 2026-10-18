@@ -24,3 +24,17 @@ Bitácora de mi plan de 30 días usando IA (Claude) para generar ingresos, busca
 - Patrulla Orbital mejorado con IA: jefe final cada 5 niveles y efectos de sonido (Web Audio).
 - Juego publicado con GitHub Pages.
 - Prompt clave: "Mejora el juego: agrega un jefe final cada 5 niveles y efectos de sonido activables con un botón; explícame cada cambio antes de hacerlo".
+
+### Día 3 (16/10/2026)
+- Primera herramienta con la API de Claude: "Resumidor de PDFs" en Python; probado con la NOM-004 del expediente clínico.
+- Mejora: modo libro, que divide PDFs largos en partes y une los resúmenes.
+- Lista de 20 empleos objetivo (entrenamiento de IA, salud y gobierno en Campeche).
+- Creativo: nuevo enemigo "tanque" en Patrulla Orbital, pedido por mí a Claude Code y aprobado en un pull request.
+- Prompt clave: "En patrulla-orbital/index.html agrega un enemigo 'tanque': verde, más grande y lento que los normales, con 4 de vida, que parpadee al recibir un golpe y dé 50 puntos. Debe aparecer desde el nivel 3. No cambies nada más. Abre un pull request".
+
+### Día 4 (18/10/2026)
+- Nicho elegido: asistentes de WhatsApp con IA y webs para consultorios privados en Campeche y Carmen, con una clínica local como cliente piloto.
+- Análisis del nicho con IA: dolores, 3 paquetes con precios, costos y competencia; precios validados con lo que se cobra en Campeche.
+- 2 postulaciones enviadas de la lista de empleos.
+- Creativo: juego "Recepción en apuros", donde los WhatsApp de los pacientes llegan cada vez más rápido.
+- Prompt clave: "Crea un juego de navegador en el que soy la recepcionista de un consultorio y debo contestar los mensajes de WhatsApp de los pacientes antes de que se acabe el tiempo; al final muestra cuántos atendí y perdí".

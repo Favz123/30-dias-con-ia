@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Recepción en apuros</title>
+<style>
+/* Layout: pantalla tipo WhatsApp. Cabecera con marcador, chat en el centro y 3 botones de respuesta fijos abajo. */
+:root {
+  --bg: #0b141a; --chat: #0f1c24; --head: #1f2c34; --bubble: #202c33; --mine: #005c4b;
+  --ink: #e9edef; --dim: #8696a0; --green: #25d366; --red: #f15c6d; --amber: #ffb02e;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.app { max-width: 520px; height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; background: var(--chat);
+  padding-bottom: env(safe-area-inset-bottom, 0px); }
+header { background: var(--head); padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); display: flex; align-items: center; gap: 12px; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--green); color: #0b141a; display: grid; place-items: center; font-weight: 700; flex: none; }
+.title { flex: 1; min-width: 0; }
+.title h1 { font-size: 16px; margin: 0; }
+.title p { font-size: 13px; margin: 0; color: var(--dim); }
+.score { display: flex; gap: 12px; font-size: 13px; font-variant-numeric: tabular-nums; text-align: center; }
+.score b { display: block; font-size: 18px; }
+.ok b { color: var(--green); } .lost b { color: var(--red); }
+#chat { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+.msg { max-width: 85%; background: var(--bubble); border-radius: 0 10px 10px 10px; padding: 8px 10px 10px; align-self: flex-start; position: relative; animation: pop .2s ease-out; }
+.msg.me { align-self: flex-end; background: var(--mine); border-radius: 10px 0 10px 10px; }
+.msg .who { font-size: 13px; font-weight: 600; color: var(--amber); }
+.msg .bar { height: 4px; border-radius: 2px; background: #33424b; margin-top: 8px; overflow: hidden; }
+.msg .bar i { display: block; height: 100%; width: 100%; background: var(--green); transform-origin: left; }
+.msg.active { outline: 2px solid var(--green); }
+.msg.done { opacity: .6; } .msg.done .bar { display: none; }
+.msg .tag { font-size: 12px; margin-top: 4px; font-weight: 600; }
+.msg.win .tag { color: var(--green); } .msg.fail .tag { color: var(--red); }
+.sys { align-self: center; font-size: 13px; color: var(--dim); background: var(--head); padding: 4px 10px; border-radius: 8px; text-align: center; }
+@keyframes pop { from { transform: scale(.9); opacity: 0; } }
+.answers { background: var(--head); padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 8px; }
+.answers p { margin: 0; font-size: 13px; color: var(--dim); }
+.answers button { font: inherit; font-size: 15px; text-align: left; padding: 12px 14px; min-height: 48px; border-radius: 12px; border: 1px solid #2a3942;
+  background: var(--bubble); color: var(--ink); cursor: pointer; touch-action: manipulation; }
+.answers button:active { background: var(--mine); }
+.answers button:disabled { opacity: .4; cursor: default; }
+button:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.overlay { position: fixed; inset: 0; background: rgb(11 20 26 / .94); display: grid; place-items: center; padding: 16px; z-index: 2; }
+.overlay[hidden] { display: none; }
+.card { max-width: 420px; width: 100%; background: var(--head); border-radius: 16px; padding: 24px 20px; text-align: center; }
+.card h2 { margin: 0 0 8px; font-size: 24px; text-wrap: balance; }
+.card p { color: var(--dim); margin: 0 0 16px; text-wrap: pretty; }
+.big { display: flex; justify-content: center; gap: 28px; margin: 8px 0 16px; font-variant-numeric: tabular-nums; }
+.big div { font-size: 14px; color: var(--dim); }
+.big b { display: block; font-size: 40px; }
+.ia { color: var(--green) !important; font-weight: 700; font-size: 18px; }
+.play { font: inherit; font-weight: 700; font-size: 17px; padding: 14px 28px; border-radius: 999px; border: 0; background: var(--green); color: #0b141a; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="avatar" aria-hidden="true">+</div>
+    <div class="title"><h1>Consultorio Dra. Salud</h1><p id="estado">Recepción · en línea</p></div>
+    <div class="score"><div class="ok">Atendidos<b id="okN">0</b></div><div class="lost">Perdidos<b id="lostN">0</b></div></div>
+  </header>
+  <main id="chat" aria-live="polite"></main>
+  <section class="answers">
+    <p id="hint">Contesta el mensaje marcado en verde</p>
+    <button type="button" data-i="0" disabled>…</button>
+    <button type="button" data-i="1" disabled>…</button>
+    <button type="button" data-i="2" disabled>…</button>
+  </section>
+</div>
+
+<div class="overlay" id="inicio">
+  <div class="card">
+    <h2>Recepción en apuros</h2>
+    <p>Eres la recepcionista del consultorio. Los pacientes escriben por WhatsApp y cada mensaje tiene su tiempo. Elige la respuesta correcta antes de que se acabe. Cada vez llegan más rápido; los que no contestes a tiempo, o contestes mal, son pacientes perdidos.</p>
+    <button class="play" id="jugar" type="button">Abrir WhatsApp</button>
+  </div>
+</div>
+
+<div class="overlay" id="fin" hidden>
+  <div class="card">
+    <h2>Fin del turno</h2>
+    <div class="big"><div>Atendidos<b id="finOk" style="color:var(--green)">0</b></div><div>Perdidos<b id="finLost" style="color:var(--red)">0</b></div></div>
+    <p id="finMsg"></p>
+    <p class="ia">Un asistente con IA los habría contestado todos.</p>
+    <button class="play" id="otra" type="button">Jugar otra vez</button>
+  </div>
+</div>
+
+<script>
+// Banco de mensajes: el primer elemento de "r" es la respuesta correcta; se barajan al mostrarse.
+const BANCO = [
+  { t: "¿Qué horario tienen?", r: ["Lunes a viernes de 9 a 7 y sábados de 9 a 2.", "Cuando el doctor llegue.", "Mándeme un audio mejor."] },
+  { t: "Quiero una cita", r: ["¡Claro! ¿Qué día y hora le acomoda?", "Ya no hay citas este año.", "Llámele a otro consultorio."] },
+  { t: "¿Aceptan seguro?", r: ["Sí, trabajamos con GNP, AXA y MetLife.", "¿Seguro de qué?", "Solo aceptamos efectivo en dólares."] },
+  { t: "¿Cuánto cuesta la consulta?", r: ["La consulta general cuesta $600.", "Depende de cómo lo vea el doctor.", "Venga y le digo."] },
+  { t: "¿Dónde están ubicados?", r: ["Calle 10 #250, Centro de Campeche. Le mando la ubicación.", "Por ahí cerca del centro.", "Búsquenos en internet."] },
+  { t: "Necesito cancelar mi cita de mañana", r: ["Listo, la cancelo. ¿Quiere reagendarla?", "No se puede cancelar.", "Ok."] },
+  { t: "¿Tienen estacionamiento?", r: ["Sí, hay estacionamiento gratis frente al consultorio.", "Venga en camión.", "No sé, nunca me he fijado."] },
+  { t: "¿Atienden niños?", r: ["Sí, la doctora atiende pacientes desde los 3 años.", "Los niños hacen mucho ruido.", "Pregunte en el DIF."] },
+  { t: "¿Puedo pagar con tarjeta?", r: ["Sí, aceptamos tarjeta de débito y crédito.", "Solo trueque.", "Mejor transfiérame a mi cuenta personal."] },
+  { t: "¿Dan factura?", r: ["Sí, envíenos sus datos fiscales y se la mandamos.", "¿Qué es eso?", "Las facturas son para empresas."] },
+  { t: "¿Abren en domingo?", r: ["Los domingos no abrimos, pero el lunes desde las 9.", "Solo si es urgente y paga doble.", "A veces sí, a veces no."] },
+  { t: "Ya llegué, ¿paso?", r: ["Bienvenido, en un momento lo llamamos.", "Espere afuera.", "¿Quién es usted?"] },
+  { t: "¿Necesito ir en ayunas para mis análisis?", r: ["Sí, 8 horas de ayuno. Puede tomar agua.", "Desayune bien por si acaso.", "Eso no lo sé."] },
+  { t: "¿Me pueden mandar mis resultados?", r: ["Claro, se los envío por aquí en PDF hoy mismo.", "Venga por ellos en persona el próximo mes.", "Se perdieron."] },
+  { t: "¿La doctora da consulta en línea?", r: ["Sí, hay videoconsulta. ¿Le agendo una?", "La doctora no sabe usar la computadora.", "Eso no existe."] },
+  { t: "Es urgente, me siento muy mal", r: ["Si es una emergencia llame al 911. Si no, le doy cita hoy mismo.", "Tómese un té.", "Escriba más tarde."] },
+  { t: "¿Cuánto tarda la consulta?", r: ["Unos 30 minutos aproximadamente.", "Todo el día.", "Lo que el doctor quiera."] },
+  { t: "¿Tienen lugar para hoy?", r: ["Sí, tengo un espacio a las 5:30. ¿Se lo aparto?", "Hoy no, nunca hay.", "Venga y vemos."] },
+  { t: "¿Hay que llevar algo a la primera cita?", r: ["Su identificación y estudios previos si tiene.", "Un regalo para la doctora.", "Nada, ni ganas."] },
+  { t: "Gracias por la atención 🙏", r: ["¡Con gusto! Que se mejore pronto.", "Ajá.", "Por fin se despide."] }
+];
+const NOMBRES = ["Doña Mari", "Don Chucho", "Lupita", "Sr. Can", "Fer", "Rosy", "Don Beto", "Andrea", "Sra. Uc", "Memo", "Carmen", "Pepe", "Ale", "Don Lalo", "Paty", "Sra. Ek", "Jorge", "Mayra", "Toño", "Lucía"];
+const TOTAL = 20;
+
+const $ = (s) => document.querySelector(s);
+const chat = $("#chat"), botones = [...document.querySelectorAll(".answers button")];
+let cola, pendientes, ok, lost, llegados, siguiente, ultimo, corriendo, activo;
+
+function barajar(a) { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function iniciar() {
+  chat.innerHTML = "";
+  const nombres = barajar(NOMBRES);
+  cola = barajar(BANCO).slice(0, TOTAL).map((m, i) => ({ ...m, nombre: nombres[i % nombres.length] }));
+  pendientes = []; ok = 0; lost = 0; llegados = 0; activo = null;
+  marcador();
+  sistema("Hoy · Empieza tu turno");
+  $("#inicio").hidden = true; $("#fin").hidden = true;
+  siguiente = performance.now() + 600; ultimo = performance.now(); corriendo = true;
+  requestAnimationFrame(bucle);
+}
+
+// Dificultad: cada mensaje llega antes que el anterior y dura menos.
+function intervalo(n) { return Math.max(1100, 4200 - n * 170); }
+function duracion(n) { return Math.max(4200, 9000 - n * 260); }
+
+function llega(ahora) {
+  const m = cola[llegados];
+  m.dur = duracion(llegados); m.resta = m.dur; m.opciones = barajar(m.r.map((t, i) => ({ t, bien: i === 0 })));
+  m.el = document.createElement("div");
+  m.el.className = "msg";
+  m.el.innerHTML = `<div class="who"></div><div class="txt"></div><div class="bar"><i></i></div>`;
+  m.el.querySelector(".who").textContent = m.nombre;
+  m.el.querySelector(".txt").textContent = m.t;
+  chat.appendChild(m.el); bajar();
+  pendientes.push(m); llegados++;
+  siguiente = ahora + intervalo(llegados);
+  zumbido();
+}
+
+function bucle(ahora) {
+  if (!corriendo) return;
+  const dt = Math.min(100, ahora - ultimo); ultimo = ahora;
+  if (llegados < cola.length && ahora >= siguiente) llega(ahora);
+  for (const m of [...pendientes]) {
+    m.resta -= dt;
+    const f = Math.max(0, m.resta / m.dur);
+    const barra = m.el.querySelector(".bar i");
+    barra.style.transform = `scaleX(${f})`;
+    barra.style.background = f > .5 ? "var(--green)" : f > .25 ? "var(--amber)" : "var(--red)";
+    if (m.resta <= 0) cerrar(m, false, "Sin respuesta · paciente perdido");
+  }
+  elegirActivo();
+  $("#estado").textContent = pendientes.length ? `${pendientes.length} sin contestar` : "Recepción · en línea";
+  if (llegados >= cola.length && !pendientes.length) return terminar();
+  requestAnimationFrame(bucle);
+}
+
+// El mensaje activo es siempre el más antiguo sin contestar.
+function elegirActivo() {
+  const m = pendientes[0] || null;
+  if (m === activo) return;
+  if (activo) activo.el.classList.remove("active");
+  activo = m;
+  botones.forEach((b, i) => { b.disabled = !m; b.textContent = m ? m.opciones[i].t : "…"; });
+  $("#hint").textContent = m ? `Contestando a ${m.nombre}` : "Esperando mensajes…";
+  if (m) m.el.classList.add("active");
+}
+
+function cerrar(m, bien, etiqueta) {
+  pendientes = pendientes.filter((x) => x !== m);
+  m.el.classList.remove("active"); m.el.classList.add("done", bien ? "win" : "fail");
+  const tag = document.createElement("div"); tag.className = "tag"; tag.textContent = etiqueta; m.el.appendChild(tag);
+  bien ? ok++ : lost++;
+  marcador();
+}
+
+function responder(i) {
+  const m = activo; if (!m || !corriendo) return;
+  const op = m.opciones[i];
+  const r = document.createElement("div"); r.className = "msg me"; r.textContent = op.t;
+  m.el.after(r);
+  cerrar(m, op.bien, op.bien ? "✓✓ Atendido" : "Respuesta equivocada · paciente perdido");
+  activo = null; elegirActivo(); bajar();
+}
+
+function terminar() {
+  corriendo = false; activo = null;
+  botones.forEach((b) => { b.disabled = true; b.textContent = "…"; });
+  $("#finOk").textContent = ok; $("#finLost").textContent = lost;
+  $("#finMsg").textContent = lost === 0 ? "¡Turno perfecto! Pero mañana llegarán el doble…"
+    : `Atendiste ${ok} de ${TOTAL} pacientes. ${lost} se fueron con otro consultorio.`;
+  setTimeout(() => { $("#fin").hidden = false; $("#otra").focus(); }, 500);
+}
+
+function marcador() { $("#okN").textContent = ok; $("#lostN").textContent = lost; }
+function sistema(t) { const d = document.createElement("div"); d.className = "sys"; d.textContent = t; chat.appendChild(d); }
+function bajar() { chat.scrollTop = chat.scrollHeight; }
+
+let audio;
+function zumbido() {
+  try {
+    audio ||= new (window.AudioContext || window.webkitAudioContext)();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.frequency.value = 880; g.gain.setValueAtTime(.08, audio.currentTime); g.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .15);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + .15);
+  } catch (e) {}
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+
+botones.forEach((b) => b.addEventListener("click", () => responder(+b.dataset.i)));
+document.addEventListener("keydown", (e) => { if (["1", "2", "3"].includes(e.key)) responder(+e.key - 1); });
+$("#jugar").addEventListener("click", iniciar);
+$("#otra").addEventListener("click", iniciar);
+</script>
+</body>
+</html>

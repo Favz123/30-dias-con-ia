@@ -2,6 +2,8 @@
 
 Demo de un asistente estilo WhatsApp para un consultorio **ficticio** de Campeche: responde horarios, precios, ubicación y servicios, y toma solicitudes de cita (nombre, día y motivo). No da diagnósticos y manda las urgencias al 911.
 
+**Demo en vivo:** https://chatbot-consultorio-claude.vercel.app/
+
 Sirve para enseñarle a un médico cómo funcionaría su asistente antes de conectarlo a su WhatsApp real.
 
 ## Cómo funciona

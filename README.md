@@ -10,7 +10,7 @@ Bitácora de mi plan de 30 días usando IA (Claude) para generar ingresos, busca
 | Patrulla Orbital | Juego arcade de naves para navegador, hecho con IA: niveles, jefes finales cada 5 niveles, disparo triple y efectos de sonido. Funciona en computadora y celular. | [Jugar](https://favz123.github.io/30-dias-con-ia/patrulla-orbital/) · [Código](patrulla-orbital/index.html) |
 | Resumidor de PDFs | Script en Python que usa la API de Claude para resumir cualquier PDF en español: resumen, puntos clave y acciones sugeridas. | [Código](resumidor-pdf/) |
 | Recepción en apuros | Juego de navegador: eres la recepcionista de un consultorio y debes contestar los WhatsApp de los pacientes antes de que se acabe el tiempo. Cada vez llegan más rápido. Funciona en celular. | [Jugar](https://favz123.github.io/30-dias-con-ia/recepcion-en-apuros/) · [Código](recepcion-en-apuros/index.html) |
-| Chatbot de consultorio | Asistente estilo WhatsApp con la API de Claude para un consultorio ficticio: horarios, precios y solicitudes de cita. Publicado gratis en Vercel. | [Código](chatbot-consultorio/) |
+| Chatbot de consultorio | Asistente estilo WhatsApp con la API de Claude para un consultorio ficticio: horarios, precios y solicitudes de cita. Publicado gratis en Vercel. | [Probar](https://chatbot-consultorio-claude.vercel.app/) · [Código](chatbot-consultorio/) |
 
 ## Bitácora
 

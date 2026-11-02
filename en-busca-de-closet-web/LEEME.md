@@ -2,7 +2,7 @@
 
 Catálogo de ropa de segunda mano para **enbuscadecloset.com**, con un panel privado (`/admin`) para que la dueña suba prendas y las marque como **Disponible / Apartada / Vendida** desde el celular.
 
-- **Catálogo público:** portada con las 4 tallas, páginas por talla (`/talla/chica`), búsqueda, filtro por marca, paginación y una ficha por prenda (`/prenda/CH-0012`), cada una con su botón de WhatsApp.
+- **Catálogo público:** portada con las 5 tallas, páginas por talla (`/talla/chica`), búsqueda, filtro por marca, paginación y una ficha por prenda (`/prenda/CH-0012`), cada una con su botón de WhatsApp.
 - **Estados:**
   - **Disponible:** botón "Me interesa" activo.
   - **Apartada:** etiqueta "Apartada" y botón desactivado.

@@ -27,6 +27,7 @@ mb_internal_encoding('UTF-8');
 
 /* ---------- Catálogo de tallas ---------- */
 const TALLAS = [
+    'XCH' => ['slug' => 'extra-chica', 'nombre' => 'Extra chica'],
     'CH' => ['slug' => 'chica',       'nombre' => 'Chica'],
     'M'  => ['slug' => 'mediana',     'nombre' => 'Mediana'],
     'G'  => ['slug' => 'grande',      'nombre' => 'Grande'],

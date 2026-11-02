@@ -41,7 +41,7 @@ if ($talla) {
     $canonical = '/talla/' . TALLAS[$talla]['slug'] . ($pagina > 1 ? '?pagina=' . $pagina : '');
 } else {
     $titulo = 'En Busca de Closet | Ropa de paca y segunda mano en Campeche';
-    $descripcion = 'Catálogo de ropa de marca de segunda mano en Campeche: Nike, Adidas y más en tallas Chica, Mediana, Grande y Extragrande. Envíos a todo México y tienda física en Col. San José.';
+    $descripcion = 'Catálogo de ropa de marca de segunda mano en Campeche: Nike, Adidas y más en tallas Extra chica, Chica, Mediana, Grande y Extragrande. Envíos a todo México y tienda física en Col. San José.';
     $canonical = '/';
 }
 // Las búsquedas no se indexan para no duplicar contenido.

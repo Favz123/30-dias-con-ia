@@ -4,7 +4,7 @@ declare(strict_types=1);
 require is_file(__DIR__ . '/../app/bootstrap.php') ? __DIR__ . '/../app/bootstrap.php' : __DIR__ . '/app/bootstrap.php';
 
 $codigo = (string) ($_GET['c'] ?? '');
-$p = preg_match('/^[A-Za-z]{1,2}-\d{1,6}$/', $codigo) ? prenda_por_codigo($codigo) : null;
+$p = preg_match('/^[A-Za-z]{1,3}-\d{1,6}$/', $codigo) ? prenda_por_codigo($codigo) : null;
 
 if (!$p || !prenda_visible($p)) {
     http_response_code($p ? 410 : 404); // 410: ya se vendió hace tiempo

@@ -135,7 +135,7 @@ section{padding:84px 0}
 .card-body p{margin:0;color:var(--muted);font-size:.95rem}
 .feature{display:inline-block;align-self:flex-start;background:var(--lila-100);color:var(--lila-700);font-weight:800;font-size:.8rem;padding:.25em .7em;border-radius:999px}
 .card-body .btn{margin-top:auto}
-.catalog-note{text-align:center;color:var(--muted);margin-top:-12px}
+.catalog-note{text-align:center;color:var(--muted);margin:48px 0 0}
 
 /* ---------- Dinámica ---------- */
 .dark{background:var(--ink);color:#fff}
@@ -242,7 +242,8 @@ section{padding:84px 0}
 .estado-apartado .ribbon{background:#d97706}
 .estado-vendido .ribbon{background:var(--ink)}
 .estado-vendido .card-media img{filter:grayscale(.85) brightness(.9)}
-.estado-apartado .tag:not(.size),.pager{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:40px;flex-wrap:wrap;font-weight:700}
+.estado-apartado .tag:not(.size),.estado-vendido .tag:not(.size){display:none}
+.pager{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:40px;flex-wrap:wrap;font-weight:700}
 .pager .btn{padding:.6em 1.2em}
 .empty{text-align:center;background:#fff;border-radius:var(--radius);padding:44px 20px;border:2px dashed var(--lila-300);color:var(--muted)}
 .empty strong{display:block;font:900 1.6rem var(--serif);color:var(--ink);margin-bottom:6px}

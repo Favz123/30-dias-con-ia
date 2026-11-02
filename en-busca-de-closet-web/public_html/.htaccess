@@ -13,8 +13,8 @@ ErrorDocument 404 /prenda.php
   RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
 
   # Direcciones amigables
-  RewriteRule ^talla/(chica|mediana|grande|extragrande)/?$ index.php?talla=$1 [L,QSA]
-  RewriteRule ^prenda/([A-Za-z]{1,2}-[0-9]+)/?$ prenda.php?c=$1 [L,QSA]
+  RewriteRule ^talla/(extra-chica|chica|mediana|grande|extragrande)/?$ index.php?talla=$1 [L,QSA]
+  RewriteRule ^prenda/([A-Za-z]{1,3}-[0-9]+)/?$ prenda.php?c=$1 [L,QSA]
   RewriteRule ^sitemap\.xml$ sitemap.php [L]
 </IfModule>
 

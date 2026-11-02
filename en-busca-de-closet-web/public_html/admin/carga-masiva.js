@@ -8,7 +8,8 @@
   var CSRF = raiz.getAttribute('data-csrf');
   var MAX_LOTE = 40;
   var MAX_LADO = 1600;
-  var TALLAS = ['CH', 'M', 'G', 'XG'];
+  var TALLAS = ['XCH', 'CH', 'M', 'G', 'XG'];
+  var ALIAS = { XS: 'XCH', ECH: 'XCH', S: 'CH', L: 'G', XL: 'XG' };
   var MARCAS = (window.CLOSET_MARCAS || []).slice().sort(function (a, b) { return b.length - a.length; });
 
   var input = raiz.querySelector('[data-fotos]');
@@ -29,13 +30,15 @@
     if (/^(img|dsc|pxl|photo|foto|image|imagen|screenshot|captura|whatsapp|wa)[\s-]*\d/i.test(base) || /^[\d\s-]+$/.test(base)) {
       return {};
     }
-    base = base.replace(/^(CH|M|G|XG)-/i, '$1 ').replace(/-\$?(\d{2,6})$/, ' $1');
+    base = base.replace(/^(XCH|CH|M|G|XG|XS)-/i, '$1 ').replace(/-\$?(\d{2,6})$/, ' $1');
     var tokens = base.split(/\s+/).filter(function (t) { return t && t !== '-' && t !== '|'; });
     var r = {};
     var resto = [];
     tokens.forEach(function (t) {
       var limpio = t.replace(/[,;]$/, '');
-      if (!r.talla && TALLAS.indexOf(limpio.toUpperCase()) !== -1) { r.talla = limpio.toUpperCase(); return; }
+      var may = limpio.toUpperCase();
+      if (!r.talla && TALLAS.indexOf(may) !== -1) { r.talla = may; return; }
+      if (!r.talla && ALIAS[may]) { r.talla = ALIAS[may]; return; }
       var precio = limpio.match(/^\$?(\d{2,6})(?:\.00)?$/);
       if (precio) { r.precio = precio[1]; return; }
       resto.push(t);

@@ -100,11 +100,11 @@ img{display:block;max-width:100%}
 .photo-pick img:not([hidden]) + .photo-cta{position:absolute;bottom:10px;background:rgba(255,255,255,.92);border-radius:999px;padding:8px 14px;font-size:.95rem}
 .photo-pick input{position:absolute;inset:0;opacity:0;cursor:pointer}
 
-.sizes{border:0;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sizes{border:0;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .sizes legend{font-weight:700;font-size:.95rem;margin-bottom:6px;padding:0}
 .sizes label{display:block!important;position:relative}
 .sizes input{position:absolute;opacity:0;inset:0}
-.sizes span{display:grid;place-items:center;gap:0;min-height:62px;border:2px solid var(--lila-200);border-radius:12px;font-size:.72rem;font-weight:700;color:var(--muted);cursor:pointer}
+.sizes span{display:grid;place-items:center;gap:0;min-height:62px;border:2px solid var(--lila-200);border-radius:12px;font-size:.66rem;text-align:center;line-height:1.15;padding:4px 2px;font-weight:700;color:var(--muted);cursor:pointer}
 .sizes span b{font-size:1.25rem;color:var(--ink)}
 .sizes input:checked + span{background:var(--ink);border-color:var(--ink);color:var(--lila-200)}
 .sizes input:checked + span b{color:#fff}
@@ -126,8 +126,8 @@ img{display:block;max-width:100%}
 .lote-campos input{width:100%;min-height:42px;padding:8px 12px;border-radius:10px;border:2px solid var(--lila-200);font:16px system-ui,sans-serif;min-width:0}
 .lote-campos input:focus{outline:none;border-color:var(--lila-500)}
 .lote-campos .two{gap:8px;grid-template-columns:1.4fr 1fr}
-.lote-sizes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.lote-sizes button{min-height:38px;border-radius:10px;border:2px solid var(--lila-200);background:#fff;font:800 .95rem system-ui,sans-serif;color:var(--ink);cursor:pointer}
+.lote-sizes{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.lote-sizes button{min-height:38px;padding:0;border-radius:10px;border:2px solid var(--lila-200);background:#fff;font:800 .85rem system-ui,sans-serif;color:var(--ink);cursor:pointer}
 .lote-sizes button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
 .lote-quitar{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:0;background:var(--lila-100);color:var(--muted);font-size:.9rem;cursor:pointer}
 .lote-estado{margin:0;font-size:.88rem;font-weight:700;color:var(--muted);min-height:1em}

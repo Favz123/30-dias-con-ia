@@ -4,12 +4,12 @@
 $ruta = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $raiz = realpath(__DIR__ . '/../public_html');
 
-if (preg_match('#^/talla/(chica|mediana|grande|extragrande)/?$#', $ruta, $m)) {
+if (preg_match('#^/talla/(extra-chica|chica|mediana|grande|extragrande)/?$#', $ruta, $m)) {
     $_GET['talla'] = $m[1];
     require $raiz . '/index.php';
     return true;
 }
-if (preg_match('#^/prenda/([A-Za-z]{1,2}-[0-9]+)/?$#', $ruta, $m)) {
+if (preg_match('#^/prenda/([A-Za-z]{1,3}-[0-9]+)/?$#', $ruta, $m)) {
     $_GET['c'] = $m[1];
     require $raiz . '/prenda.php';
     return true;

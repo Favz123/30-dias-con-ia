@@ -69,5 +69,5 @@ require APP_DIR . '/vistas/admin-encabezado.php';
   </template>
 </div>
 <script>window.CLOSET_MARCAS = <?= json_encode(marcas_sugeridas(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;</script>
-<script src="/admin/carga-masiva.js?v=2" defer></script>
+<script src="/admin/carga-masiva.js?v=3" defer></script>
 <?php require APP_DIR . '/vistas/admin-pie.php';

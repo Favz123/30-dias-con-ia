@@ -111,3 +111,34 @@ img{display:block;max-width:100%}
 .sizes input:focus-visible + span{outline:3px solid var(--lila-500);outline-offset:2px}
 .actions{display:grid;gap:10px}
 .danger-zone .btn{margin-top:4px}
+
+/* Carga masiva */
+.bulk-link{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;background:#fff;border:2px dashed var(--lila-400);border-radius:var(--r);padding:12px;font-weight:800;text-decoration:none;color:var(--lila-700)}
+.photo-pick.multi{min-height:150px;text-align:center}
+.photo-pick.multi small{font-weight:600;color:var(--muted)}
+.tips{background:var(--lila-50);border-radius:12px;padding:10px 14px;font-size:.92rem}
+.tips summary{font-weight:800;cursor:pointer}
+.tips p{margin:8px 0 0;color:var(--muted)}
+.lote{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:10px}
+.lote-item{position:relative;display:grid;grid-template-columns:96px 1fr;gap:12px;background:#fff;border:1px solid var(--lila-200);border-radius:var(--r);padding:10px;border-left:6px solid var(--lila-300)}
+.lote-item img{width:96px;height:96px;object-fit:cover;border-radius:10px;background:var(--lila-100)}
+.lote-campos{display:grid;gap:8px;min-width:0;padding-right:26px}
+.lote-campos input{width:100%;min-height:42px;padding:8px 12px;border-radius:10px;border:2px solid var(--lila-200);font:16px system-ui,sans-serif;min-width:0}
+.lote-campos input:focus{outline:none;border-color:var(--lila-500)}
+.lote-campos .two{gap:8px;grid-template-columns:1.4fr 1fr}
+.lote-sizes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.lote-sizes button{min-height:38px;border-radius:10px;border:2px solid var(--lila-200);background:#fff;font:800 .95rem system-ui,sans-serif;color:var(--ink);cursor:pointer}
+.lote-sizes button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.lote-quitar{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:0;background:var(--lila-100);color:var(--muted);font-size:.9rem;cursor:pointer}
+.lote-estado{margin:0;font-size:.88rem;font-weight:700;color:var(--muted);min-height:1em}
+.lote-estado:empty{display:none}
+.lote-estado.bien{color:var(--ok)}
+.lote-estado.mal{color:var(--bad)}
+.lote-item.falta{border-left-color:var(--bad);background:#fff7f7}
+.lote-item.trabajando{border-left-color:var(--amber);opacity:.8}
+.lote-item.listo{border-left-color:var(--ok);background:#f6fef8}
+.lote-item.listo input,.lote-item.listo button{opacity:.7}
+.barra{position:sticky;bottom:0;background:var(--lila-50);padding:12px 0 calc(12px + env(safe-area-inset-bottom));display:grid;gap:8px;border-top:1px solid var(--lila-200)}
+.progreso{height:10px;background:var(--lila-100);border-radius:999px;overflow:hidden}
+.progreso span{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+@media (max-width:380px){.lote-item{grid-template-columns:72px 1fr}.lote-item img{width:72px;height:72px}}

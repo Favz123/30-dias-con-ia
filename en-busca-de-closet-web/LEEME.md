@@ -7,6 +7,7 @@ Catálogo de ropa de segunda mano para **enbuscadecloset.com**, con un panel pri
   - **Disponible:** botón "Me interesa" activo.
   - **Apartada:** etiqueta "Apartada" y botón desactivado.
   - **Vendida:** se ve en gris con la etiqueta "Vendida" durante 3 días y después desaparece sola. Los días se configuran en `dias_vendido`.
+- **Carga masiva** (`/admin/carga-masiva.php`): hasta 40 fotos por tanda, también desde Google Drive. Si el archivo se llama `CH - Short Nike negro - 250.jpg`, se llenan solos la talla, la marca, el nombre y el precio. Hay un "aplicar a todas" para lo que se repite, y las fotos se comprimen y suben una por una con barra de progreso.
 - **Panel:** foto con la cámara (se reduce en el celular antes de subirla), código automático (`CH-0001`), botones de estado de un toque, búsqueda por código, aviso de apartados vencidos (más de 7 días) y opción "Guardar y subir otra", que recuerda la talla y la marca.
 - **SEO:** HTML generado en el servidor, `sitemap.xml` automático, datos estructurados (`ClothingStore`, `FAQPage`, `Product`, `BreadcrumbList`), URLs limpias y fotos WebP.
 

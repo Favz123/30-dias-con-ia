@@ -64,6 +64,8 @@ $aqui = $_SERVER['REQUEST_URI'] ?? '/admin/';
 $titulo = 'Mis prendas';
 require APP_DIR . '/vistas/admin-encabezado.php';
 ?>
+<a class="bulk-link" href="/admin/carga-masiva.php">📚 Subir varias prendas a la vez</a>
+
 <section class="stats" aria-label="Resumen">
   <a class="stat" href="<?= e(enlace_admin(['estado' => 'disponible', 'pagina' => 1])) ?>"><b><?= $resumen['disponibles'] ?? 0 ?></b><span>Disponibles</span></a>
   <a class="stat amber" href="<?= e(enlace_admin(['estado' => 'apartado', 'pagina' => 1])) ?>"><b><?= $resumen['apartados'] ?? 0 ?></b><span>Apartadas<?php if (!empty($resumen['vencidos'])): ?> · <em><?= $resumen['vencidos'] ?> vencidas</em><?php endif; ?></span></a>

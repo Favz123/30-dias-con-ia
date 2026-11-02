@@ -470,3 +470,103 @@ function prenda_visible(array $p): bool
 {
     return $p['estado'] !== 'vendido' || ($p['vendido_en'] !== null && $p['vendido_en'] >= limite_vendidas());
 }
+
+/* ---------- Alta y validación de prendas (formulario y carga masiva) ---------- */
+const CAMPOS_PRENDA = ['nombre', 'marca', 'talla', 'precio', 'detalle', 'descripcion'];
+
+function leer_campos_prenda(array $src): array
+{
+    $f = [];
+    foreach (CAMPOS_PRENDA as $campo) {
+        $f[$campo] = trim((string) ($src[$campo] ?? ''));
+    }
+    $f['talla'] = strtoupper($f['talla']);
+    $f['precio'] = preg_replace('/[^\d]/', '', $f['precio']);
+    return $f;
+}
+
+function validar_prenda(array $f): array
+{
+    $errores = [];
+    if ($f['nombre'] === '' || mb_strlen($f['nombre']) > 120) {
+        $errores[] = 'Escribe el nombre de la prenda (máximo 120 letras).';
+    }
+    if (!isset(TALLAS[$f['talla']])) {
+        $errores[] = 'Elige la talla.';
+    }
+    if (mb_strlen($f['marca']) > 60 || mb_strlen($f['detalle']) > 60) {
+        $errores[] = 'La marca y el detalle deben ser cortos (máximo 60 letras).';
+    }
+    if (mb_strlen($f['descripcion']) > 1000) {
+        $errores[] = 'La descripción es muy larga (máximo 1000 letras).';
+    }
+    if ($f['precio'] !== '' && (int) $f['precio'] > 1000000) {
+        $errores[] = 'Revisa el precio.';
+    }
+    return $errores;
+}
+
+/** Revisa la foto subida. Devuelve [hay foto (bool), lista de errores]. */
+function validar_archivo_foto(?array $archivo, bool $obligatoria): array
+{
+    $hayFoto = $archivo && ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+    $errores = [];
+    if ($hayFoto && $archivo['error'] !== UPLOAD_ERR_OK) {
+        $errores[] = in_array($archivo['error'], [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)
+            ? 'La foto pesa demasiado. Intenta con otra.'
+            : 'No se pudo subir la foto. Intenta de nuevo.';
+    } elseif ($hayFoto && !is_uploaded_file($archivo['tmp_name'])) {
+        $errores[] = 'No se pudo subir la foto. Intenta de nuevo.';
+    }
+    if ($obligatoria && !$hayFoto) {
+        $errores[] = 'Agrega la foto de la prenda.';
+    }
+    return [$hayFoto, $errores];
+}
+
+/**
+ * Da de alta una prenda nueva: la guarda, le asigna código (CH-0001) y procesa la foto.
+ * Devuelve el código. Lanza RuntimeException (mensaje para la usuaria) o PDOException.
+ */
+function crear_prenda(array $f, string $rutaFoto): string
+{
+    $pdo = db();
+    $ahora = ahora();
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare("INSERT INTO prendas (nombre, marca, talla, precio, detalle, descripcion, foto, estado, creado_en, actualizado_en)
+            VALUES (:nombre, :marca, :talla, :precio, :detalle, :descripcion, '', 'disponible', :creado, :act)")->execute([
+            ':nombre' => $f['nombre'],
+            ':marca' => $f['marca'],
+            ':talla' => $f['talla'],
+            ':precio' => $f['precio'] === '' ? null : (int) $f['precio'],
+            ':detalle' => $f['detalle'],
+            ':descripcion' => $f['descripcion'],
+            ':creado' => $ahora,
+            ':act' => $ahora,
+        ]);
+        $id = (int) $pdo->lastInsertId();
+        $codigo = sprintf('%s-%04d', $f['talla'], $id);
+        $foto = guardar_foto($rutaFoto, $codigo);
+        $pdo->prepare('UPDATE prendas SET codigo = :c, foto = :f WHERE id = :id')
+            ->execute([':c' => $codigo, ':f' => $foto, ':id' => $id]);
+        $pdo->commit();
+        return $codigo;
+    } catch (Throwable $ex) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        if (isset($foto)) {
+            borrar_foto($foto);
+        }
+        throw $ex;
+    }
+}
+
+function marcas_sugeridas(): array
+{
+    return array_values(array_unique(array_merge(
+        db()->query("SELECT DISTINCT marca FROM prendas WHERE marca <> '' ORDER BY marca")->fetchAll(PDO::FETCH_COLUMN),
+        ['Nike', 'Adidas', 'Puma', 'Under Armour', 'Reebok', 'Lululemon', 'Fila', 'New Balance', 'Zara', 'H&M', 'Shein', 'Forever 21', 'Old Navy', 'Gap', "Levi's", 'Hollister', 'American Eagle', 'Bershka', 'Pull&Bear']
+    )));
+}

@@ -35,39 +35,11 @@ $errores = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verificar_csrf();
-    foreach ($f as $campo => $_) {
-        $f[$campo] = trim((string) ($_POST[$campo] ?? ''));
-    }
-    $f['precio'] = preg_replace('/[^\d]/', '', $f['precio']);
-
-    if ($f['nombre'] === '' || mb_strlen($f['nombre']) > 120) {
-        $errores[] = 'Escribe el nombre de la prenda (máximo 120 letras).';
-    }
-    if (!isset(TALLAS[$f['talla']])) {
-        $errores[] = 'Elige la talla.';
-    }
-    if (mb_strlen($f['marca']) > 60 || mb_strlen($f['detalle']) > 60) {
-        $errores[] = 'La marca y el detalle deben ser cortos (máximo 60 letras).';
-    }
-    if (mb_strlen($f['descripcion']) > 1000) {
-        $errores[] = 'La descripción es muy larga (máximo 1000 letras).';
-    }
-    if ($f['precio'] !== '' && (int) $f['precio'] > 1000000) {
-        $errores[] = 'Revisa el precio.';
-    }
-
+    $f = leer_campos_prenda($_POST);
+    $errores = validar_prenda($f);
     $archivo = $_FILES['foto'] ?? null;
-    $hayFoto = $archivo && ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
-    if ($hayFoto && $archivo['error'] !== UPLOAD_ERR_OK) {
-        $errores[] = in_array($archivo['error'], [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)
-            ? 'La foto pesa demasiado. Intenta con otra.'
-            : 'No se pudo subir la foto. Intenta de nuevo.';
-    } elseif ($hayFoto && !is_uploaded_file($archivo['tmp_name'])) {
-        $errores[] = 'No se pudo subir la foto. Intenta de nuevo.';
-    }
-    if (!$p && !$hayFoto) {
-        $errores[] = 'Agrega la foto de la prenda.';
-    }
+    [$hayFoto, $erroresFoto] = validar_archivo_foto($archivo, !$p);
+    $errores = array_merge($errores, $erroresFoto);
 
     if (!$errores) {
         $ahora = ahora();
@@ -99,17 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 redirigir($volver);
             }
 
-            // Prenda nueva: se guarda, se le asigna código (CH-0001) y se procesa la foto.
-            $pdo->beginTransaction();
-            $datos[':creado'] = $ahora;
-            $pdo->prepare("INSERT INTO prendas (nombre, marca, talla, precio, detalle, descripcion, foto, estado, creado_en, actualizado_en)
-                VALUES (:nombre, :marca, :talla, :precio, :detalle, :descripcion, '', 'disponible', :creado, :act)")->execute($datos);
-            $nuevoId = (int) $pdo->lastInsertId();
-            $codigo = sprintf('%s-%04d', $f['talla'], $nuevoId);
-            $foto = guardar_foto($archivo['tmp_name'], $codigo);
-            $pdo->prepare('UPDATE prendas SET codigo = :c, foto = :f WHERE id = :id')
-                ->execute([':c' => $codigo, ':f' => $foto, ':id' => $nuevoId]);
-            $pdo->commit();
+            // Prenda nueva: código automático (CH-0001) y foto procesada.
+            $codigo = crear_prenda($f, $archivo['tmp_name']);
 
             $_SESSION['ultima_talla'] = $f['talla'];
             $_SESSION['ultima_marca'] = $f['marca'];
@@ -130,10 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$marcasSugeridas = array_values(array_unique(array_merge(
-    db()->query("SELECT DISTINCT marca FROM prendas WHERE marca <> '' ORDER BY marca")->fetchAll(PDO::FETCH_COLUMN),
-    ['Nike', 'Adidas', 'Puma', 'Under Armour', 'Reebok', 'Lululemon', 'Fila', 'New Balance', 'Zara', 'H&M', 'Shein', 'Forever 21', 'Old Navy', 'Gap', "Levi's", 'Hollister', 'American Eagle', 'Bershka', 'Pull&Bear']
-)));
+$marcasSugeridas = marcas_sugeridas();
 
 $titulo = $p ? 'Editar ' . $p['codigo'] : 'Nueva prenda';
 require APP_DIR . '/vistas/admin-encabezado.php';

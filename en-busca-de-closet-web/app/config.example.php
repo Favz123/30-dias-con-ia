@@ -9,7 +9,7 @@ return [
     'sitio_url' => 'https://enbuscadecloset.com',
 
     // WhatsApp de la tienda: 52 + 10 dígitos, sin espacios ni signos. Ej: '529811234567'
-    'whatsapp' => '',
+    'whatsapp' => '529811378725',
 
     // Días que una prenda vendida se sigue mostrando con la etiqueta "Vendida".
     'dias_vendido' => 3,

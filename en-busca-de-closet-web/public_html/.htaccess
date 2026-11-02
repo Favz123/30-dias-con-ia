@@ -1,0 +1,40 @@
+# En Busca de Closet — configuración de Apache (Hostinger)
+Options -Indexes
+DirectoryIndex index.php
+ErrorDocument 404 /prenda.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Forzar HTTPS y quitar "www."
+  RewriteCond %{HTTPS} off [OR]
+  RewriteCond %{HTTP_HOST} ^www\. [NC]
+  RewriteCond %{HTTP_HOST} ^(?:www\.)?(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+  # Direcciones amigables
+  RewriteRule ^talla/(chica|mediana|grande|extragrande)/?$ index.php?talla=$1 [L,QSA]
+  RewriteRule ^prenda/([A-Za-z]{1,2}-[0-9]+)/?$ prenda.php?c=$1 [L,QSA]
+  RewriteRule ^sitemap\.xml$ sitemap.php [L]
+</IfModule>
+
+# Archivos ocultos (.git, .env, etc.) no accesibles
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+
+# Caché del navegador para fotos, estilos y scripts
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+</IfModule>

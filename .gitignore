@@ -3,3 +3,8 @@ __pycache__/
 .env
 node_modules/
 .vercel/
+# En Busca de Closet (sitio PHP): datos locales y secretos
+en-busca-de-closet-web/app/config.php
+en-busca-de-closet-web/app/datos/
+en-busca-de-closet-web/public_html/uploads/*
+!en-busca-de-closet-web/public_html/uploads/.htaccess

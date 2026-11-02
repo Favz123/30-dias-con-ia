@@ -12,6 +12,7 @@ Bitácora de mi plan de 30 días usando IA (Claude) para generar ingresos, busca
 | Recepción en apuros | Juego de navegador: eres la recepcionista de un consultorio y debes contestar los WhatsApp de los pacientes antes de que se acabe el tiempo. Cada vez llegan más rápido. Funciona en celular. | [Jugar](https://favz123.github.io/30-dias-con-ia/recepcion-en-apuros/) · [Código](recepcion-en-apuros/index.html) |
 | Chatbot de consultorio | Asistente estilo WhatsApp con la API de Claude para un consultorio ficticio: horarios, precios y solicitudes de cita. Publicado gratis en Vercel. | [Probar](https://chatbot-consultorio-claude.vercel.app/) · [Código](chatbot-consultorio/) |
 | En Busca de Closet | Catálogo web estático (en lila) para una tienda de ropa de segunda mano en Campeche: prendas por talla (CH, M, G, XG) con botón a WhatsApp, dinámica de compra, envíos, preguntas frecuentes y ubicación. Optimizado para SEO. | [Ver sitio](https://favz123.github.io/30-dias-con-ia/en-busca-de-closet/) · [Código](en-busca-de-closet/index.html) |
+| En Busca de Closet (tienda con panel) | Versión en PHP + MySQL para Hostinger (enbuscadecloset.com): catálogo de cientos de prendas por talla con búsqueda y ficha por prenda, y un panel para que la dueña suba fotos desde el celular y marque cada prenda como disponible, apartada o vendida. | [Código](en-busca-de-closet-web/) |
 
 ## Bitácora
 

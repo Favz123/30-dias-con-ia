@@ -1,4 +1,8 @@
 <?php
+/**
+ * En Busca de Closet · enbuscadecloset.com
+ * Diseño y desarrollo: Favzstudio.com (https://favzstudio.com)
+ */
 declare(strict_types=1);
 
 const APP_DIR = __DIR__;

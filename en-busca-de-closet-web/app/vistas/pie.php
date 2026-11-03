@@ -14,6 +14,7 @@
     </div>
   </div>
   <p class="copy">© <?= date('Y') ?> En Busca de Closet. Todos los derechos reservados.</p>
+  <p class="copy credit">Sitio web creado por <a href="https://favzstudio.com" target="_blank" rel="noopener">Favzstudio.com</a></p>
 </footer>
 
 <a class="wa-float" href="<?= e($waGeneral) ?>" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">

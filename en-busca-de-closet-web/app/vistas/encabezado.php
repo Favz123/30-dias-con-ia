@@ -8,6 +8,10 @@ $og_imagen = $og_imagen ?? url('/assets/img/og-image.jpg');
 $ruta_menu = $ruta_menu ?? '';
 $waGeneral = whatsapp_link('¡Hola! Vi su catálogo en línea y tengo una duda.');
 ?><!DOCTYPE html>
+<!--
+  En Busca de Closet · enbuscadecloset.com
+  Diseño y desarrollo: Favzstudio.com · https://favzstudio.com
+-->
 <html lang="es-MX">
 <head>
 <meta charset="UTF-8">
@@ -38,7 +42,7 @@ $waGeneral = whatsapp_link('¡Hola! Vi su catálogo en línea y tengo una duda.'
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/site.css?v=4">
+<link rel="stylesheet" href="/assets/css/site.css?v=5">
 <?php foreach (($jsonld ?? []) as $bloque): ?>
 <script type="application/ld+json"><?= json_encode($bloque, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
 <?php endforeach; ?>

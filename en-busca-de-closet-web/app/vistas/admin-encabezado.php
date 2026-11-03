@@ -3,6 +3,10 @@
 $aviso = tomar_aviso();
 $usuarioSesion = usuario_actual();
 ?><!DOCTYPE html>
+<!--
+  En Busca de Closet · enbuscadecloset.com
+  Diseño y desarrollo: Favzstudio.com · https://favzstudio.com
+-->
 <html lang="es-MX">
 <head>
 <meta charset="UTF-8">
@@ -15,7 +19,7 @@ $usuarioSesion = usuario_actual();
 <link rel="apple-touch-icon" href="/assets/img/logo-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Closet Panel">
-<link rel="stylesheet" href="/admin/admin.css?v=5">
+<link rel="stylesheet" href="/admin/admin.css?v=6">
 </head>
 <body>
 <header class="top">

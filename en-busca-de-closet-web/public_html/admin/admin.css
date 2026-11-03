@@ -154,3 +154,7 @@ img{display:block;max-width:100%}
 .users summary{cursor:pointer;font-weight:700;color:var(--lila-700);padding:4px 0}
 .mini-form{display:grid;gap:8px;margin:8px 0}
 .panel code{background:var(--lila-100);padding:1px 6px;border-radius:6px;font-size:.9em}
+
+/* Crédito */
+.credit-admin{text-align:center;font-size:.8rem;color:var(--muted);margin:8px 0 24px}
+.credit-admin a{color:var(--lila-700);font-weight:700;text-decoration:none}

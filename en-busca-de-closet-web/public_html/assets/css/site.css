@@ -203,6 +203,7 @@ section{padding:84px 0}
 .copy.credit{margin-top:6px;font-size:.82rem}
 .credit a{color:var(--lila-300);font-weight:700;text-decoration:none}
 .credit a:hover{text-decoration:underline}
+.product-photo figcaption{padding:10px 14px;font-size:.88rem;color:var(--muted);background:#fff;border-top:1px solid var(--lila-200)}
 @media (max-width:640px){.site-footer{padding-bottom:104px}}
 
 /* ---------- WhatsApp flotante ---------- */
@@ -232,9 +233,9 @@ section{padding:84px 0}
 .results-info{text-align:center;color:var(--muted);margin:-14px 0 28px;font-weight:600}
 .results-info a{font-weight:800}
 .size-more{display:flex;justify-content:center;margin-top:22px}
-.card h3{margin:0;font-family:var(--sans);font-size:1.08rem;font-weight:800;line-height:1.3}
-.card h3 a{text-decoration:none}
-.card h3 a:hover{text-decoration:underline}
+.card .card-title{margin:0;font-family:var(--sans);font-size:1.08rem;font-weight:800;line-height:1.3}
+.card .card-title a{text-decoration:none}
+.card .card-title a:hover{text-decoration:underline}
 .card-media{display:block}
 .meta-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .price{font:900 1.35rem var(--serif);color:var(--ink)}

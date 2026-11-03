@@ -22,7 +22,7 @@ foreach ($prendas as $i => [$nombre, $marca, $talla, $precio, $detalle, $desc, $
         ->execute([':n' => $nombre, ':m' => $marca, ':t' => $talla, ':p' => $precio, ':d' => $detalle, ':desc' => $desc, ':c' => $fecha, ':a' => $fecha]);
     $id = (int) $pdo->lastInsertId();
     $codigo = sprintf('%s-%04d', $talla, $id);
-    $archivo = guardar_foto("$fotos/$foto", $codigo);
+    $archivo = guardar_foto("$fotos/$foto", $codigo, $nombre);
     $pdo->prepare('UPDATE prendas SET codigo = :c, foto = :f WHERE id = :id')->execute([':c' => $codigo, ':f' => $archivo, ':id' => $id]);
     echo "$codigo  $nombre\n";
 }

@@ -40,6 +40,10 @@ $descripcion = $p['descripcion'] !== ''
     : sprintf('%s %s talla %s de segunda mano en Campeche. Apártala por WhatsApp; envíos a todo México.', $p['nombre'], $p['marca'], $tallaP['nombre']);
 $canonical = prenda_url($p);
 $og_imagen = url(foto_url($p));
+$og_imagen_alt = texto_alt($p);
+// Medidas reales de la foto, para que la página no "brinque" al cargar.
+$medidas = $p['foto'] !== '' ? @getimagesize(rtrim((string) cfg('carpeta_fotos'), '/') . '/' . $p['foto']) : false;
+[$fotoAncho, $fotoAlto] = $medidas ? [$medidas[0], $medidas[1]] : [1200, 1200];
 $noindex = $p['estado'] === 'vendido';
 
 $disponibilidad = [
@@ -95,8 +99,9 @@ require APP_DIR . '/vistas/encabezado.php';
       </nav>
       <div class="product estado-<?= e($p['estado']) ?>">
         <figure class="product-photo">
-          <img src="<?= e(foto_url($p)) ?>" width="1200" height="1200" alt="<?= e(trim($p['nombre'] . ' ' . $p['marca']) . ', talla ' . mb_strtolower($tallaP['nombre'])) ?>">
+          <img src="<?= e(foto_url($p)) ?>" width="<?= $fotoAncho ?>" height="<?= $fotoAlto ?>" alt="<?= e(texto_alt($p)) ?>" fetchpriority="high">
           <?php if ($p['estado'] !== 'disponible'): ?><span class="ribbon"><?= e(ESTADOS[$p['estado']]) ?></span><?php endif; ?>
+          <figcaption>Foto real de la prenda · <?= e($p['nombre']) ?>, talla <?= e(mb_strtolower($tallaP['nombre'])) ?> · Código <?= e($p['codigo']) ?></figcaption>
         </figure>
         <div class="product-info">
           <div class="chips">
@@ -133,7 +138,7 @@ require APP_DIR . '/vistas/encabezado.php';
       <?php if ($similares): ?>
         <div class="size-title" style="margin-top:40px"><span class="size-badge" aria-hidden="true"><?= e($p['talla']) ?></span><h2 style="font-size:clamp(1.6rem,4vw,2.2rem)">Más en talla <?= e($tallaP['nombre']) ?></h2></div>
         <div class="grid">
-          <?php foreach ($similares as $p) { require APP_DIR . '/vistas/tarjeta.php'; } ?>
+          <?php $nivelTitulo = 3; foreach ($similares as $p) { require APP_DIR . '/vistas/tarjeta.php'; } ?>
         </div>
         <div class="size-more"><a class="btn btn-dark" href="/talla/<?= e($tallaP['slug']) ?>#catalogo">Ver toda la talla <?= e($tallaP['nombre']) ?> →</a></div>
       <?php endif; ?>

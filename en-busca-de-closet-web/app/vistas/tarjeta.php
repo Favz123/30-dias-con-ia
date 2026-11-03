@@ -1,7 +1,11 @@
 <?php
-/** Tarjeta de una prenda. Variable esperada: $p (fila normalizada de "prendas"). */
+/**
+ * Tarjeta de una prenda. Variables: $p (fila normalizada de "prendas"),
+ * $nivelTitulo (opcional, 2–4: nivel del título según la sección donde va; 3 por omisión).
+ */
 $tallaP = TALLAS[$p['talla']];
-$alt = trim($p['nombre'] . ' ' . $p['marca']) . ', talla ' . mb_strtolower($tallaP['nombre']);
+$alt = texto_alt($p);
+$h = 'h' . max(2, min(4, (int) ($nivelTitulo ?? 3)));
 ?>
 <article class="card reveal estado-<?= e($p['estado']) ?>">
   <a class="card-media" href="<?= e(prenda_url($p)) ?>" tabindex="-1" aria-hidden="true">
@@ -11,7 +15,7 @@ $alt = trim($p['nombre'] . ' ' . $p['marca']) . ', talla ' . mb_strtolower($tall
     <?php if ($p['estado'] !== 'disponible'): ?><span class="ribbon"><?= e(ESTADOS[$p['estado']]) ?></span><?php endif; ?>
   </a>
   <div class="card-body">
-    <h3><a href="<?= e(prenda_url($p)) ?>"><?= e($p['nombre']) ?></a></h3>
+    <<?= $h ?> class="card-title"><a href="<?= e(prenda_url($p)) ?>"><?= e($p['nombre']) ?></a></<?= $h ?>>
     <div class="meta-row">
       <?php if ($p['precio'] !== null): ?>
         <span class="price"><?= e(precio($p['precio'])) ?></span>

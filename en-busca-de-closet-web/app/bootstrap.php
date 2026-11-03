@@ -190,6 +190,30 @@ function mensaje_prenda(array $p): string
     return $msg . '. ' . prenda_url($p, true);
 }
 
+/** Texto alternativo (alt) de la foto de una prenda: qué es, marca y talla, para Google Imágenes y lectores de pantalla. */
+function texto_alt(array $p): string
+{
+    $texto = $p['nombre'];
+    if ($p['marca'] !== '' && mb_stripos($texto, $p['marca']) === false) {
+        $texto .= ' ' . $p['marca'];
+    }
+    return $texto . ', talla ' . mb_strtolower(TALLAS[$p['talla']]['nombre']) . ', de segunda mano en Campeche';
+}
+
+/** Convierte un texto en una parte de URL o nombre de archivo: "Short Niké negro" → "short-nike-negro". */
+function slug(string $texto, int $max = 40): string
+{
+    $t = mb_strtolower(trim($texto));
+    $t = strtr($t, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n']);
+    $t = trim(preg_replace('/[^a-z0-9]+/', '-', $t), '-');
+    if (strlen($t) > $max) {
+        // Corta en la última palabra completa que cabe.
+        $t = substr($t, 0, $max + 1);
+        $t = strpos($t, '-') !== false ? substr($t, 0, strrpos($t, '-')) : substr($t, 0, $max);
+    }
+    return $t;
+}
+
 function hace(string $fecha): string
 {
     $dias = (int) floor((time() - strtotime($fecha)) / 86400);
@@ -378,7 +402,7 @@ function registrar_fallo(string $clave): void
  * Convierte la foto subida a WebP (grande y miniatura), corrige la rotación
  * y elimina los metadatos. Devuelve el nombre del archivo grande.
  */
-function guardar_foto(string $tmp, string $codigo): string
+function guardar_foto(string $tmp, string $codigo, string $descripcion = ''): string
 {
     @ini_set('memory_limit', '384M');
     $info = @getimagesize($tmp);
@@ -401,7 +425,9 @@ function guardar_foto(string $tmp, string $codigo): string
     if (!is_dir($carpeta)) {
         mkdir($carpeta, 0775, true);
     }
-    $nombre = strtolower($codigo) . '-' . bin2hex(random_bytes(3)) . '.webp';
+    // Nombre descriptivo para Google Imágenes: "short-nike-negro-ch-0012-a1b2c3.webp" (cabe en 60 caracteres).
+    $prefijo = slug($descripcion, 30);
+    $nombre = ($prefijo !== '' ? $prefijo . '-' : '') . strtolower($codigo) . '-' . bin2hex(random_bytes(3)) . '.webp';
     guardar_redimensionada($img, 1200, $carpeta . '/' . $nombre, 80);
     guardar_redimensionada($img, 600, $carpeta . '/' . str_replace('.webp', '-t.webp', $nombre), 76);
     imagedestroy($img);
@@ -452,13 +478,18 @@ function preguntas_frecuentes(): array
 
 function jsonld_tienda(): array
 {
-    return [
+    $tienda = [
         '@context' => 'https://schema.org',
         '@type' => 'ClothingStore',
+        '@id' => url('/#tienda'),
         'name' => 'En Busca de Closet',
         'url' => url('/'),
-        'logo' => url('/assets/img/logo-512.png'),
-        'image' => url('/assets/img/tienda-fisica-campeche.webp'),
+        'logo' => [
+            '@type' => 'ImageObject',
+            'url' => url('/assets/img/logo-512.png'),
+            'caption' => 'Logo de En Busca de Closet',
+        ],
+        'image' => [url('/assets/img/tienda-fisica-campeche.webp'), url('/assets/img/logo-512.png')],
         'description' => 'Tienda de ropa de segunda mano y ropa deportiva de marca en Campeche, con envíos a todo México.',
         'address' => [
             '@type' => 'PostalAddress',
@@ -467,11 +498,42 @@ function jsonld_tienda(): array
             'addressRegion' => 'Campeche',
             'addressCountry' => 'MX',
         ],
+        'hasMap' => 'https://www.google.com/maps/search/?api=1&query=Av.+Colosio+54+Col.+San+Jos%C3%A9+San+Francisco+de+Campeche',
         'paymentAccepted' => 'Efectivo, transferencia, depósito, tarjeta de débito y crédito',
         'currenciesAccepted' => 'MXN',
         'areaServed' => 'MX',
         'sameAs' => ['https://www.instagram.com/enbuscadecloset/'],
     ];
+    $tel = preg_replace('/\D/', '', (string) cfg('whatsapp'));
+    if (strlen($tel) === 12) {
+        $tienda['telephone'] = '+' . $tel;
+    }
+    return $tienda;
+}
+
+/** Nombre del sitio para Google (el que aparece arriba de cada resultado). */
+function jsonld_sitio(): array
+{
+    return [
+        '@context' => 'https://schema.org',
+        '@type' => 'WebSite',
+        'name' => 'En Busca de Closet',
+        'alternateName' => 'enbuscadecloset.com',
+        'url' => url('/'),
+        'inLanguage' => 'es-MX',
+        'publisher' => ['@id' => url('/#tienda')],
+        'creator' => ['@type' => 'Organization', 'name' => 'Favzstudio', 'url' => 'https://favzstudio.com'],
+    ];
+}
+
+/** Lista de las prendas que muestra una página (tallas y búsqueda). */
+function jsonld_lista(array $prendas, string $nombre): array
+{
+    $items = [];
+    foreach (array_values($prendas) as $i => $p) {
+        $items[] = ['@type' => 'ListItem', 'position' => $i + 1, 'url' => prenda_url($p, true), 'name' => $p['nombre']];
+    }
+    return ['@context' => 'https://schema.org', '@type' => 'ItemList', 'name' => $nombre, 'itemListElement' => $items];
 }
 
 function jsonld_preguntas(): array
@@ -642,7 +704,7 @@ function crear_prenda(array $f, string $rutaFoto): string
         ]);
         $id = (int) $pdo->lastInsertId();
         $codigo = sprintf('%s-%04d', $f['talla'], $id);
-        $foto = guardar_foto($rutaFoto, $codigo);
+        $foto = guardar_foto($rutaFoto, $codigo, $f['nombre']);
         $pdo->prepare('UPDATE prendas SET codigo = :c, foto = :f WHERE id = :id')
             ->execute([':c' => $codigo, ':f' => $foto, ':id' => $id]);
         $pdo->commit();

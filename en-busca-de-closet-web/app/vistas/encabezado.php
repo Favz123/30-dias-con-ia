@@ -5,6 +5,7 @@
  * $noindex (bool, opcional), $jsonld (lista de arreglos, opcional), $ruta_menu (prefijo de anclas)
  */
 $og_imagen = $og_imagen ?? url('/assets/img/og-image.jpg');
+$og_imagen_alt = $og_imagen_alt ?? 'Logo de En Busca de Closet, tienda de ropa de segunda mano en Campeche';
 $ruta_menu = $ruta_menu ?? '';
 $waGeneral = whatsapp_link('¡Hola! Vi su catálogo en línea y tengo una duda.');
 ?><!DOCTYPE html>
@@ -35,6 +36,9 @@ $waGeneral = whatsapp_link('¡Hola! Vi su catálogo en línea y tengo una duda.'
 <meta property="og:description" content="<?= e($descripcion) ?>">
 <meta property="og:url" content="<?= e(url($canonical)) ?>">
 <meta property="og:image" content="<?= e($og_imagen) ?>">
+<meta property="og:image:alt" content="<?= e($og_imagen_alt) ?>">
+<meta name="twitter:image" content="<?= e($og_imagen) ?>">
+<meta name="twitter:image:alt" content="<?= e($og_imagen_alt) ?>">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/logo-32.png">
 <link rel="icon" type="image/png" sizes="64x64" href="/assets/img/logo-64.png">
@@ -42,7 +46,7 @@ $waGeneral = whatsapp_link('¡Hola! Vi su catálogo en línea y tengo una duda.'
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/site.css?v=5">
+<link rel="stylesheet" href="/assets/css/site.css?v=6">
 <?php foreach (($jsonld ?? []) as $bloque): ?>
 <script type="application/ld+json"><?= json_encode($bloque, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
 <?php endforeach; ?>
@@ -58,7 +62,7 @@ $waGeneral = whatsapp_link('¡Hola! Vi su catálogo en línea y tengo una duda.'
 <header class="site-header">
   <nav class="wrap nav" aria-label="Principal">
     <a class="brand" href="/" aria-label="En Busca de Closet, inicio">
-      <img src="/assets/img/logo-64.png" width="48" height="48" alt="Logo de En Busca de Closet: gancho de ropa">
+      <img src="/assets/img/logo-64.png" width="48" height="48" alt="Logo de En Busca de Closet">
       <span>En Busca de Closet</span>
     </a>
     <button class="menu-toggle" aria-expanded="false" aria-controls="menu" aria-label="Abrir menú"><span></span><span></span><span></span></button>

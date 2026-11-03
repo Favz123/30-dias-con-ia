@@ -71,3 +71,6 @@ Abre http://localhost:8000 (tienda) y http://localhost:8000/admin (panel).
 ## Respaldos
 
 Las prendas viven en la base de datos MySQL y las fotos en `public_html/uploads/`. Hostinger hace respaldos automáticos según tu plan. Además, conviene descargar cada mes un respaldo desde **Archivos → Respaldos**.
+
+---
+Diseño y desarrollo: [Favzstudio.com](https://favzstudio.com)

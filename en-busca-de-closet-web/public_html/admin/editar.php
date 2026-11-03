@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo = db();
         try {
             if ($p) {
-                $nuevaFoto = $hayFoto ? guardar_foto($archivo['tmp_name'], $p['codigo']) : null;
+                $nuevaFoto = $hayFoto ? guardar_foto($archivo['tmp_name'], $p['codigo'], $f['nombre']) : null;
                 $sql = 'UPDATE prendas SET nombre = :nombre, marca = :marca, talla = :talla, precio = :precio,
                         detalle = :detalle, descripcion = :descripcion, actualizado_en = :act'
                     . ($nuevaFoto ? ', foto = :foto' : '') . ' WHERE id = :id';

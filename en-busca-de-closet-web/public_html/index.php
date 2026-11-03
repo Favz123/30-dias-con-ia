@@ -46,7 +46,15 @@ if ($talla) {
 }
 // Las búsquedas no se indexan para no duplicar contenido.
 $noindex = $q !== '' || $marca !== '' || ($slug !== '' && !$talla);
-$jsonld = $listado ? [jsonld_tienda()] : [jsonld_tienda(), jsonld_preguntas()];
+if ($listado) {
+    $jsonld = [jsonld_tienda()];
+    if ($prendas) {
+        $jsonld[] = jsonld_lista($prendas, $talla ? 'Ropa talla ' . TALLAS[$talla]['nombre'] : 'Resultados de búsqueda');
+    }
+} else {
+    $jsonld = [jsonld_sitio(), jsonld_tienda(), jsonld_preguntas()];
+}
+$og_imagen_alt = 'Logo de En Busca de Closet, tienda de ropa de segunda mano en Campeche';
 
 /** Arma la URL del listado conservando los filtros. */
 function enlace_listado(?string $talla, string $q, string $marca, int $pagina = 1): string
@@ -90,11 +98,11 @@ require APP_DIR . '/vistas/encabezado.php';
           <?php endforeach; ?>
         </ul>
       </div>
-      <div class="collage" aria-hidden="true">
+      <div class="collage">
         <?php foreach ($collage as $i => $p): ?>
-          <figure class="polaroid p<?= $i + 1 ?>"><img src="<?= e(foto_url($p, true)) ?>" width="600" height="600" alt=""><figcaption>talla <?= e($p['talla']) ?></figcaption></figure>
+          <figure class="polaroid p<?= $i + 1 ?>"><img src="<?= e(foto_url($p, true)) ?>" width="600" height="600" alt="<?= e(texto_alt($p)) ?>"<?= $i === 0 ? ' fetchpriority="high"' : '' ?>><figcaption>talla <?= e(mb_strtolower(TALLAS[$p['talla']]['nombre'])) ?></figcaption></figure>
         <?php endforeach; ?>
-        <img class="hero-logo" src="/assets/img/logo.webp" width="512" height="512" alt="">
+        <img class="hero-logo" src="/assets/img/logo.webp" width="512" height="512" alt="Logo de En Busca de Closet: gancho de ropa con el nombre de la tienda">
       </div>
     </div>
   </section>
@@ -156,7 +164,7 @@ require APP_DIR . '/vistas/encabezado.php';
         </p>
         <?php if ($prendas): ?>
           <div class="grid">
-            <?php foreach ($prendas as $p) { require APP_DIR . '/vistas/tarjeta.php'; } ?>
+            <?php $nivelTitulo = 2; foreach ($prendas as $p) { require APP_DIR . '/vistas/tarjeta.php'; } ?>
           </div>
           <?php if ($paginas > 1): ?>
             <nav class="pager" aria-label="Páginas">
@@ -179,7 +187,7 @@ require APP_DIR . '/vistas/encabezado.php';
             </div>
             <?php if ($porTalla[$clave]): ?>
               <div class="grid">
-                <?php foreach ($porTalla[$clave] as $p) { require APP_DIR . '/vistas/tarjeta.php'; } ?>
+                <?php $nivelTitulo = 4; foreach ($porTalla[$clave] as $p) { require APP_DIR . '/vistas/tarjeta.php'; } ?>
               </div>
               <?php if ($conteo[$clave] > count($porTalla[$clave])): ?>
                 <div class="size-more"><a class="btn btn-dark" href="/talla/<?= e($t['slug']) ?>#catalogo">Ver las <?= $conteo[$clave] ?> prendas talla <?= e($t['nombre']) ?> →</a></div>

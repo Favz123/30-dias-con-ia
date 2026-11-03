@@ -1,0 +1,13 @@
+{
+  "name": "Panel En Busca de Closet",
+  "short_name": "Closet Panel",
+  "start_url": "/admin/",
+  "scope": "/admin/",
+  "display": "standalone",
+  "background_color": "#faf6ff",
+  "theme_color": "#141018",
+  "icons": [
+    { "src": "/assets/img/logo-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/img/logo-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

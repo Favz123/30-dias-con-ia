@@ -40,9 +40,10 @@ $waGeneral = whatsapp_link('¡Hola! Vi su catálogo en línea y tengo una duda.'
 <meta name="twitter:image" content="<?= e($og_imagen) ?>">
 <meta name="twitter:image:alt" content="<?= e($og_imagen_alt) ?>">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/logo-32.png">
-<link rel="icon" type="image/png" sizes="64x64" href="/assets/img/logo-64.png">
-<link rel="apple-touch-icon" href="/assets/img/logo-192.png">
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48 64x64">
+<link rel="icon" type="image/png" sizes="96x96" href="/assets/img/favicon-96.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">

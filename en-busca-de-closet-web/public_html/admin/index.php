@@ -36,7 +36,7 @@ if ($talla !== '') {
     $params[':talla'] = $talla;
 }
 if ($q !== '') {
-    $where[] = "(nombre LIKE :q1 ESCAPE '\\' OR marca LIKE :q2 ESCAPE '\\' OR codigo LIKE :q3 ESCAPE '\\')";
+    $where[] = "(nombre LIKE :q1 ESCAPE '!' OR marca LIKE :q2 ESCAPE '!' OR codigo LIKE :q3 ESCAPE '!')";
     $params[':q1'] = $params[':q2'] = $params[':q3'] = like($q);
 }
 $condicion = implode(' AND ', $where);

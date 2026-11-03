@@ -400,7 +400,9 @@ const SQL_ORDEN_PUBLICO = "CASE estado WHEN 'disponible' THEN 0 WHEN 'apartado' 
 
 function like(string $texto): string
 {
-    return '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $texto) . '%';
+    // "!" es el carácter de escape (ESCAPE '!'): funciona igual en MySQL y SQLite.
+    // Una diagonal invertida no sirve: MySQL la toma como escape dentro de las comillas.
+    return '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $texto) . '%';
 }
 
 /** Cantidad de prendas visibles por talla, p. ej. ['CH' => 12, 'M' => 4, ...]. */
@@ -444,7 +446,7 @@ function buscar_prendas(?string $talla, string $q, string $marca, int $pagina, i
         $params[':marca'] = $marca;
     }
     if ($q !== '') {
-        $where[] = "(nombre LIKE :q1 ESCAPE '\\' OR marca LIKE :q2 ESCAPE '\\' OR codigo LIKE :q3 ESCAPE '\\' OR descripcion LIKE :q4 ESCAPE '\\')";
+        $where[] = "(nombre LIKE :q1 ESCAPE '!' OR marca LIKE :q2 ESCAPE '!' OR codigo LIKE :q3 ESCAPE '!' OR descripcion LIKE :q4 ESCAPE '!')";
         $params[':q1'] = $params[':q2'] = $params[':q3'] = $params[':q4'] = like($q);
     }
     $condicion = implode(' AND ', $where);

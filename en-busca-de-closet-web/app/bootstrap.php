@@ -273,11 +273,99 @@ function usuario_actual(): ?array
     return $_SESSION['usuario'] ?? null;
 }
 
+/** Huella corta de la contraseña: si la contraseña cambia, las sesiones viejas dejan de valer. */
+function huella_clave(string $hash): string
+{
+    return substr(hash('sha256', $hash), 0, 16);
+}
+
+/** Guarda en la sesión al usuario que acaba de entrar. */
+function abrir_sesion(int $id, string $usuario, string $hash): void
+{
+    iniciar_sesion();
+    session_regenerate_id(true);
+    $_SESSION['usuario'] = ['id' => $id, 'usuario' => $usuario, 'huella' => huella_clave($hash)];
+}
+
 function requiere_login(): void
 {
-    if (!usuario_actual()) {
-        $total = (int) db()->query('SELECT COUNT(*) FROM usuarios')->fetchColumn();
-        redirigir($total === 0 ? '/admin/instalar.php' : '/admin/entrar.php');
+    $u = usuario_actual();
+    if ($u) {
+        // La cuenta debe seguir existiendo y con la misma contraseña con la que se entró.
+        $st = db()->prepare('SELECT usuario, clave_hash FROM usuarios WHERE id = :id');
+        $st->execute([':id' => $u['id']]);
+        $fila = $st->fetch();
+        if ($fila && !isset($u['huella'])) {
+            // Sesiones abiertas antes de esta función: se adoptan una sola vez.
+            $_SESSION['usuario']['huella'] = huella_clave($fila['clave_hash']);
+            return;
+        }
+        if ($fila && hash_equals($u['huella'], huella_clave($fila['clave_hash']))) {
+            return;
+        }
+        unset($_SESSION['usuario']);
+        aviso('Tu contraseña cambió o tu cuenta ya no existe. Vuelve a entrar.', 'error');
+        redirigir('/admin/entrar.php');
+    }
+    $total = (int) db()->query('SELECT COUNT(*) FROM usuarios')->fetchColumn();
+    redirigir($total === 0 ? '/admin/instalar.php' : '/admin/entrar.php');
+}
+
+/* ---------- Contraseñas y usuarios ---------- */
+function validar_usuario_nuevo(string $usuario): array
+{
+    if (!preg_match('/^[A-Za-z0-9._-]{3,40}$/', $usuario)) {
+        return ['El usuario debe tener de 3 a 40 letras o números, sin espacios.'];
+    }
+    $st = db()->prepare('SELECT COUNT(*) FROM usuarios WHERE usuario = :u');
+    $st->execute([':u' => $usuario]);
+    return (int) $st->fetchColumn() > 0 ? ['Ese usuario ya existe.'] : [];
+}
+
+function validar_clave_nueva(string $clave, string $confirmacion): array
+{
+    if (mb_strlen($clave) < 8) {
+        return ['La contraseña nueva debe tener al menos 8 caracteres.'];
+    }
+    if (mb_strlen($clave) > 200) {
+        return ['La contraseña nueva es demasiado larga.'];
+    }
+    if ($clave !== $confirmacion) {
+        return ['Las dos contraseñas nuevas no coinciden.'];
+    }
+    return [];
+}
+
+/** Cambia la contraseña y devuelve el hash nuevo. */
+function cambiar_clave(int $id, string $clave): string
+{
+    $hash = password_hash($clave, PASSWORD_DEFAULT);
+    db()->prepare('UPDATE usuarios SET clave_hash = :h WHERE id = :id')->execute([':h' => $hash, ':id' => $id]);
+    return $hash;
+}
+
+function crear_usuario(string $usuario, string $clave): int
+{
+    $hash = password_hash($clave, PASSWORD_DEFAULT);
+    db()->prepare('INSERT INTO usuarios (usuario, clave_hash, creado_en) VALUES (:u, :h, :f)')
+        ->execute([':u' => $usuario, ':h' => $hash, ':f' => ahora()]);
+    return (int) db()->lastInsertId();
+}
+
+/** Freno contra quien intente adivinar: 5 fallos seguidos = 60 s de espera. Devuelve segundos por esperar. */
+function espera_intentos(string $clave): int
+{
+    iniciar_sesion();
+    return max(0, (int) ($_SESSION['bloqueo'][$clave] ?? 0) - time());
+}
+
+function registrar_fallo(string $clave): void
+{
+    sleep(1);
+    $_SESSION['fallos'][$clave] = (int) ($_SESSION['fallos'][$clave] ?? 0) + 1;
+    if ($_SESSION['fallos'][$clave] >= 5) {
+        $_SESSION['bloqueo'][$clave] = time() + 60;
+        $_SESSION['fallos'][$clave] = 0;
     }
 }
 

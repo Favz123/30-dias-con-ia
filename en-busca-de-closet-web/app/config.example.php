@@ -37,6 +37,10 @@ return [
     // Cámbiala por algo difícil antes de subir el sitio.
     'clave_instalacion' => 'cambia-esta-clave',
 
+    // Clave de emergencia para /admin/recuperar.php, por si NADIE puede entrar al panel.
+    // Déjala vacía para desactivarla. Si la usas: 12 caracteres o más, y sólo la conoce quien administra el hosting.
+    'clave_recuperacion' => '',
+
     // Carpeta pública donde se guardan las fotos de las prendas.
     // Si subiste app/ DENTRO de public_html, cámbialo por: __DIR__ . '/../uploads'
     'carpeta_fotos' => __DIR__ . '/../public_html/uploads',

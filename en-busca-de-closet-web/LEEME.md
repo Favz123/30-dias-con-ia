@@ -63,6 +63,11 @@ Abre http://localhost:8000 (tienda) y http://localhost:8000/admin (panel).
 
 > Si Hostinger no te deja poner `app/` fuera de `public_html`, súbela dentro (`public_html/app/`). El sitio la encuentra solo y `app/.htaccess` bloquea el acceso desde internet. En ese caso, en `config.php` cambia `carpeta_fotos` por `__DIR__ . '/../uploads'`.
 
+## Contraseñas
+
+- **Mi cuenta y usuarios** (`/admin/cuenta.php`): cambiar la propia contraseña, agregar personas con acceso, ponerle una contraseña nueva a quien la olvidó y quitar accesos. Al cambiar una contraseña se cierran las sesiones abiertas con la anterior.
+- **Recuperación de emergencia** (`/admin/recuperar.php`): sólo para cuando nadie puede entrar. Se activa al agregar `'clave_recuperacion' => '…'` (12 caracteres o más) en `app/config.php`. Tras 5 intentos fallidos pide esperar 60 segundos.
+
 ## Respaldos
 
 Las prendas viven en la base de datos MySQL y las fotos en `public_html/uploads/`. Hostinger hace respaldos automáticos según tu plan. Además, conviene descargar cada mes un respaldo desde **Archivos → Respaldos**.

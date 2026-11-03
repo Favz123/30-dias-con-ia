@@ -150,6 +150,7 @@ require APP_DIR . '/vistas/admin-encabezado.php';
 <form class="logout" method="post" action="/admin/salir.php">
   <?= csrf_campo() ?>
   <span>Sesión: <?= e(usuario_actual()['usuario']) ?></span>
+  <a href="/admin/cuenta.php">Mi cuenta y contraseña</a>
   <button class="link" type="submit">Cerrar sesión</button>
 </form>
 

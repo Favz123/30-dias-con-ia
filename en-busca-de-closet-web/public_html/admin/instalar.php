@@ -25,10 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (mb_strlen($clave) < 8) {
         $error = 'La contraseña debe tener al menos 8 caracteres.';
     } else {
-        $st = db()->prepare('INSERT INTO usuarios (usuario, clave_hash, creado_en) VALUES (:u, :h, :f)');
-        $st->execute([':u' => $usuario, ':h' => password_hash($clave, PASSWORD_DEFAULT), ':f' => ahora()]);
-        session_regenerate_id(true);
-        $_SESSION['usuario'] = ['id' => (int) db()->lastInsertId(), 'usuario' => $usuario];
+        $id = crear_usuario($usuario, $clave);
+        $st = db()->prepare('SELECT clave_hash FROM usuarios WHERE id = :id');
+        $st->execute([':id' => $id]);
+        abrir_sesion($id, $usuario, (string) $st->fetchColumn());
         aviso('¡Cuenta creada! Ya puedes subir prendas.');
         redirigir('/admin/');
     }

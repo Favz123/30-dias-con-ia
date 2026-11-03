@@ -142,3 +142,15 @@ img{display:block;max-width:100%}
 .progreso{height:10px;background:var(--lila-100);border-radius:999px;overflow:hidden}
 .progreso span{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
 @media (max-width:380px){.lote-item{grid-template-columns:72px 1fr}.lote-item img{width:72px;height:72px}}
+
+/* Cuenta y usuarios */
+.hint.center{text-align:center}
+.logout{flex-wrap:wrap}
+.logout a{font-weight:700}
+.users{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.users li{border:1px solid var(--lila-200);border-radius:12px;padding:10px 12px}
+.users small{color:var(--muted);font-weight:400}
+.users details{margin-top:8px}
+.users summary{cursor:pointer;font-weight:700;color:var(--lila-700);padding:4px 0}
+.mini-form{display:grid;gap:8px;margin:8px 0}
+.panel code{background:var(--lila-100);padding:1px 6px;border-radius:6px;font-size:.9em}

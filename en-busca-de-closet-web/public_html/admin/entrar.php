@@ -27,13 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $st->execute([':u' => $usuario]);
         $fila = $st->fetch();
         if ($fila && password_verify($clave, $fila['clave_hash'])) {
-            if (password_needs_rehash($fila['clave_hash'], PASSWORD_DEFAULT)) {
-                db()->prepare('UPDATE usuarios SET clave_hash = :h WHERE id = :id')
-                    ->execute([':h' => password_hash($clave, PASSWORD_DEFAULT), ':id' => $fila['id']]);
-            }
-            session_regenerate_id(true);
             unset($_SESSION['intentos'], $_SESSION['bloqueo_hasta']);
-            $_SESSION['usuario'] = ['id' => (int) $fila['id'], 'usuario' => $fila['usuario']];
+            $hash = password_needs_rehash($fila['clave_hash'], PASSWORD_DEFAULT) ? cambiar_clave((int) $fila['id'], $clave) : $fila['clave_hash'];
+            abrir_sesion((int) $fila['id'], $fila['usuario'], $hash);
             redirigir('/admin/');
         }
         sleep(1); // frena a quien intente adivinar contraseñas
@@ -60,5 +56,6 @@ require APP_DIR . '/vistas/admin-encabezado.php';
     <input type="password" name="clave" required autocomplete="current-password">
   </label>
   <button class="btn primary block" type="submit">Entrar</button>
+  <p class="hint center">¿Olvidaste tu contraseña? Pide a otra persona con acceso que te ponga una nueva, o usa la <a href="/admin/recuperar.php">recuperación de emergencia</a>.</p>
 </form>
 <?php require APP_DIR . '/vistas/admin-pie.php';

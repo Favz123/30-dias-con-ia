@@ -81,7 +81,7 @@ Nunca sube ni borra `app/config.php`, `app/datos/` ni las fotos de `public_html/
 
 1. **Datos FTP en Hostinger.** En hPanel → **Archivos → Cuentas FTP** anota el **servidor (host o IP)** y el **usuario**. Si no sabes la contraseña, cámbiala ahí mismo.
 2. **Secretos en GitHub.** En el repositorio → **Settings → Secrets and variables → Actions → Secrets → New repository secret**, crea:
-   - `FTP_SERVIDOR`: el host o IP del paso 1;
+   - `FTP_SERVIDOR`: de preferencia la **IP de FTP** del paso 1 (ej. `185.123.45.67`). Si lo pegas con `ftp://`, diagonales, puerto o espacios, la automatización lo limpia sola y, si el servidor no existe, lo dice con un mensaje claro;
    - `FTP_USUARIO`: el usuario FTP;
    - `FTP_CLAVE`: la contraseña FTP.
 3. **Variables en GitHub.** En la misma pantalla → pestaña **Variables**, crea:

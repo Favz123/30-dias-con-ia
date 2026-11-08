@@ -2,7 +2,8 @@
 # cada vez que se fusiona en main un cambio de en-busca-de-closet-web/app o /public_html.
 #
 # Configuración (una sola vez), en GitHub → Settings → Secrets and variables → Actions:
-#   Secrets:   FTP_SERVIDOR  (ej. ftp.enbuscadecloset.com o la IP que da hPanel)
+#   Secrets:   FTP_SERVIDOR  la «IP de FTP» de hPanel (ej. 185.123.45.67) o el nombre del servidor;
+#                            si se pega con ftp://, diagonales, puerto o espacios, se limpia solo
 #              FTP_USUARIO   (ej. u123456789)
 #              FTP_CLAVE
 #   Variables: FTP_RUTA      carpeta del dominio vista desde la cuenta FTP, donde están
@@ -88,12 +89,50 @@ jobs:
           if [ -z "$FTP_SERVIDOR" ] || [ -z "$FTP_USUARIO" ] || [ -z "$FTP_CLAVE" ]; then
             echo "::warning::Faltan los secretos FTP_SERVIDOR, FTP_USUARIO o FTP_CLAVE. No se publicó nada; revisa en-busca-de-closet-web/LEEME.md."
             echo "listo=no" >> "$GITHUB_OUTPUT"
-          else
-            ruta="${FTP_RUTA%/}/"
-            echo "ruta=$ruta" >> "$GITHUB_OUTPUT"
-            echo "listo=si" >> "$GITHUB_OUTPUT"
-            echo "Destino: $FTP_PROTOCOLO://$FTP_SERVIDOR/$ruta · simular=$SIMULAR"
+            exit 0
           fi
+
+          # Limpia FTP_SERVIDOR tal como suele copiarse de hPanel:
+          # "ftp://enbuscadecloset.com/", "https://...", "usuario@host", "host:21", espacios o saltos de línea.
+          servidor="$(printf '%s' "$FTP_SERVIDOR" | tr -d '[:space:]')"
+          esquema=""
+          case "$servidor" in *://*) esquema="${servidor%%://*}"; servidor="${servidor#*://}" ;; esac
+          servidor="${servidor%%/*}"
+          servidor="${servidor##*@}"
+          puerto=21
+          case "$servidor" in
+            *:*) p="${servidor##*:}"; servidor="${servidor%:*}"
+                 case "$p" in ''|*[!0-9]*) ;; *) puerto="$p" ;; esac ;;
+          esac
+          usuario="$(printf '%s' "$FTP_USUARIO" | tr -d '[:space:]')"
+          echo "::add-mask::$servidor"
+          echo "::add-mask::$usuario"
+
+          if [ "$servidor" != "$FTP_SERVIDOR" ]; then
+            echo "::notice::Se limpió FTP_SERVIDOR automáticamente (tenía ${esquema:+el prefijo $esquema://, }diagonales, puerto o espacios). Conviene guardarlo sólo como el nombre o la IP."
+          fi
+          if [ "$esquema" = "sftp" ] || [ "$puerto" = "22" ] || [ "$puerto" = "65002" ]; then
+            echo "::warning::Los datos parecen de SFTP (puerto $puerto). Esta automatización usa FTP/FTPS por el puerto 21; se usará el 21."
+            puerto=21
+          fi
+          if [ -z "$servidor" ]; then
+            echo "::error::FTP_SERVIDOR quedó vacío al limpiarlo. Guarda sólo la IP de FTP de hPanel (ej. 185.123.45.67) o el nombre del servidor, sin ftp://."
+            exit 1
+          fi
+          if ! getent hosts "$servidor" > /dev/null; then
+            echo "::error::El servidor de FTP_SERVIDOR no existe (no se encontró en internet). En hPanel → Archivos → Cuentas FTP copia la «IP de FTP» y guárdala tal cual en el secreto FTP_SERVIDOR, sin ftp:// ni diagonales."
+            exit 1
+          fi
+
+          {
+            echo "FTP_HOST=$servidor"
+            echo "FTP_PUERTO=$puerto"
+            echo "FTP_USUARIO_LIMPIO=$usuario"
+          } >> "$GITHUB_ENV"
+          ruta="${FTP_RUTA%/}/"
+          echo "ruta=$ruta" >> "$GITHUB_OUTPUT"
+          echo "listo=si" >> "$GITHUB_OUTPUT"
+          echo "Destino: $FTP_PROTOCOLO://$servidor:$puerto/$ruta · simular=$SIMULAR"
 
       # Sólo sube lo que cambió desde la última publicación (guarda un registro oculto
       # .ftp-deploy-sync-state.json en el servidor; el .htaccess impide verlo desde internet).
@@ -101,8 +140,9 @@ jobs:
         if: steps.config.outputs.listo == 'si'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ env.FTP_SERVIDOR }}
-          username: ${{ env.FTP_USUARIO }}
+          server: ${{ env.FTP_HOST }}
+          port: ${{ env.FTP_PUERTO }}
+          username: ${{ env.FTP_USUARIO_LIMPIO }}
           password: ${{ env.FTP_CLAVE }}
           protocol: ${{ env.FTP_PROTOCOLO }}
           local-dir: ./en-busca-de-closet-web/app/
@@ -119,8 +159,9 @@ jobs:
         if: steps.config.outputs.listo == 'si'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ env.FTP_SERVIDOR }}
-          username: ${{ env.FTP_USUARIO }}
+          server: ${{ env.FTP_HOST }}
+          port: ${{ env.FTP_PUERTO }}
+          username: ${{ env.FTP_USUARIO_LIMPIO }}
           password: ${{ env.FTP_CLAVE }}
           protocol: ${{ env.FTP_PROTOCOLO }}
           local-dir: ./en-busca-de-closet-web/public_html/

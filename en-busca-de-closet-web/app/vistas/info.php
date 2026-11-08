@@ -9,7 +9,7 @@
       <ol class="steps">
         <li class="step reveal">
           <h3>Escríbenos</h3>
-          <p>Las compras se realizan por <strong>DM o WhatsApp</strong>: mándanos las prendas de tu interés para verificar disponibilidad y aclarar las dudas que puedas tener.</p>
+          <p>Las compras se realizan por <strong>DM (Instagram o Facebook) o WhatsApp</strong>: mándanos las prendas de tu interés para verificar disponibilidad y aclarar las dudas que puedas tener.</p>
         </li>
         <li class="step reveal">
           <h3>Confirma en 30 min</h3>
@@ -29,7 +29,7 @@
       <header class="section-head">
         <h2 id="env-title">Envíos</h2>
         <span class="script">Correos o Estafeta</span>
-        <p>Enviamos a todo México. Si compras con envío, el pago es por transferencia o depósito.</p>
+        <p>Enviamos a todo México. Si compras con envío, el pago es por transferencia, depósito o link de pago con tarjeta.</p>
       </header>
       <div class="ship-grid">
         <article class="ship reveal">
@@ -49,7 +49,7 @@
           <ul>
             <li>El precio depende de la zona y peso del paquete.</li>
             <li>Económico: 5 a 7 días hábiles · Express: 1 a 2 días.</li>
-            <li>Mándanos tu código postal y colonia y te cotizamos <strong>sin compromiso</strong>.</li>
+            <li>Mándanos tu código postal y colonia, te cotizamos <strong>sin compromiso</strong>.</li>
           </ul>
         </article>
       </div>
@@ -75,7 +75,7 @@
           </ul>
         </article>
       </div>
-      <p class="pay-note">En ambos casos puedes pagar en efectivo o por transferencia / depósito.</p>
+      <p class="pay-note">En ambos casos, se puede realizar el pago en efectivo, transferencia/depósito o con tarjeta de crédito/débito.</p>
     </div>
   </section>
 
@@ -110,11 +110,11 @@
         <div class="visit-info">
           <div class="address-card reveal">
             <h3>Dirección</h3>
-            <address>Av. Colosio #54, entre Calle 20 y Calle Victoria,<br>Col. San José, San Francisco de Campeche, Camp.</address>
+            <address>Av. Colosio #54, entre Calle 22 y Calle Victoria,<br>Col. San José, San Francisco de Campeche, Camp.</address>
             <ul>
               <li>Contra esquina de “Majo Castillo” repostería.</li>
               <li>Enfrente de Mimika World (tienda de disfraces).</li>
-              <li>Al lado de “Desechables París”.</li>
+              <li>Justo al lado de la papelería.</li>
             </ul>
             <p style="margin:18px 0 0"><a class="btn btn-light" style="box-shadow:none" href="https://www.google.com/maps/search/?api=1&amp;query=Av.+Colosio+54+Col.+San+Jos%C3%A9+San+Francisco+de+Campeche" target="_blank" rel="noopener">Cómo llegar</a></p>
           </div>

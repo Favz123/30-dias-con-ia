@@ -68,6 +68,30 @@ Abre http://localhost:8000 (tienda) y http://localhost:8000/admin (panel).
 - **Mi cuenta y usuarios** (`/admin/cuenta.php`): cambiar la propia contraseña, agregar personas con acceso, ponerle una contraseña nueva a quien la olvidó y quitar accesos. Al cambiar una contraseña se cierran las sesiones abiertas con la anterior.
 - **Recuperación de emergencia** (`/admin/recuperar.php`): sólo para cuando nadie puede entrar. Se activa al agregar `'clave_recuperacion' => '…'` (12 caracteres o más) en `app/config.php`. Tras 5 intentos fallidos pide esperar 60 segundos.
 
+## Publicación automática (GitHub → Hostinger)
+
+Cada vez que se fusiona en `main` un cambio de `app/` o `public_html/`, el flujo `.github/workflows/publicar-tienda.yml`:
+
+1. revisa que ningún archivo PHP tenga errores de sintaxis y que no se haya colado `config.php`, la base de datos ni fotos (si algo falla, **no publica nada**);
+2. sube por FTP **sólo los archivos que cambiaron**, incluido `.htaccess`, y borra del servidor los que se quitaron del repositorio.
+
+Nunca sube ni borra `app/config.php`, `app/datos/` ni las fotos de `public_html/uploads/`. Tampoco toca archivos que no subió él (por ejemplo, el `default.php` de Hostinger).
+
+### Configurarlo (una sola vez)
+
+1. **Datos FTP en Hostinger.** En hPanel → **Archivos → Cuentas FTP** anota el **servidor (host o IP)** y el **usuario**. Si no sabes la contraseña, cámbiala ahí mismo.
+2. **Secretos en GitHub.** En el repositorio → **Settings → Secrets and variables → Actions → Secrets → New repository secret**, crea:
+   - `FTP_SERVIDOR`: el host o IP del paso 1;
+   - `FTP_USUARIO`: el usuario FTP;
+   - `FTP_CLAVE`: la contraseña FTP.
+3. **Variables en GitHub.** En la misma pantalla → pestaña **Variables**, crea:
+   - `FTP_RUTA`: la carpeta del dominio (donde están `app/` y `public_html/`) vista desde esa cuenta FTP. Con la cuenta FTP principal suele ser `domains/enbuscadecloset.com/`. Si la cuenta FTP ya abre directamente esa carpeta, usa `./`.
+   - `FTP_PROTOCOLO` (opcional): `ftps` por defecto, que cifra la contraseña. Si la conexión falla por TLS, cámbiala a `ftp`.
+4. **Prueba sin riesgo.** En **Actions → Publicar tienda → Run workflow**, deja marcado **"Sólo simular"** y ejecútalo. El registro muestra qué archivos subiría, sin cambiar nada.
+5. **Primera publicación real.** Vuelve a ejecutarlo con la casilla desmarcada. En el Administrador de archivos de Hostinger debe aparecer `.ftp-deploy-sync-state.json` dentro de `public_html/` y de `app/` (es el registro de lo publicado; `.htaccess` impide verlo desde internet). Si aparece en otra carpeta, corrige `FTP_RUTA`.
+
+Desde entonces, cada PR fusionado se publica solo en un minuto aproximadamente. Si faltan los secretos, el flujo termina con un aviso y no publica nada.
+
 ## Respaldos
 
 Las prendas viven en la base de datos MySQL y las fotos en `public_html/uploads/`. Hostinger hace respaldos automáticos según tu plan. Además, conviene descargar cada mes un respaldo desde **Archivos → Respaldos**.

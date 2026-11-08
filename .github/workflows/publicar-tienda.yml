@@ -1,0 +1,142 @@
+# Publica la tienda En Busca de Closet (enbuscadecloset.com) en Hostinger por FTP
+# cada vez que se fusiona en main un cambio de en-busca-de-closet-web/app o /public_html.
+#
+# Configuración (una sola vez), en GitHub → Settings → Secrets and variables → Actions:
+#   Secrets:   FTP_SERVIDOR  (ej. ftp.enbuscadecloset.com o la IP que da hPanel)
+#              FTP_USUARIO   (ej. u123456789)
+#              FTP_CLAVE
+#   Variables: FTP_RUTA      carpeta del dominio vista desde la cuenta FTP, donde están
+#                            app/ y public_html/ (ej. domains/enbuscadecloset.com/). Default: ./
+#              FTP_PROTOCOLO ftps (recomendado) o ftp. Default: ftps
+#
+# Nunca sube ni borra app/config.php, app/datos/ ni las fotos de public_html/uploads/.
+# Para probar sin cambiar nada: Actions → "Publicar tienda" → Run workflow → "Sólo simular".
+
+name: Publicar tienda
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "en-busca-de-closet-web/app/**"
+      - "en-busca-de-closet-web/public_html/**"
+      - ".github/workflows/publicar-tienda.yml"
+  workflow_dispatch:
+    inputs:
+      simular:
+        description: "Sólo simular (muestra qué subiría, sin cambiar nada)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+# Nunca dos publicaciones a la vez: la segunda espera a que termine la primera.
+concurrency:
+  group: publicar-tienda
+  cancel-in-progress: false
+
+jobs:
+  revisar:
+    name: Revisar el código PHP
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sintaxis de todos los archivos PHP
+        run: |
+          set -euo pipefail
+          php -v | head -1
+          errores=0
+          while IFS= read -r -d '' f; do
+            php -l "$f" >/dev/null || errores=$((errores + 1))
+          done < <(find en-busca-de-closet-web/app en-busca-de-closet-web/public_html -name '*.php' -print0)
+          if [ "$errores" -gt 0 ]; then
+            echo "::error::$errores archivo(s) PHP con errores de sintaxis. No se publica nada."
+            exit 1
+          fi
+          echo "Todos los archivos PHP están bien."
+
+      - name: Que no se cuelen contraseñas ni datos de prueba
+        run: |
+          set -euo pipefail
+          prohibidos=$(git ls-files en-busca-de-closet-web | grep -E '(^|/)config\.php$|\.sqlite$|/uploads/.+\.(webp|jpe?g|png)$' || true)
+          if [ -n "$prohibidos" ]; then
+            echo "::error::Hay archivos que no deben publicarse en el repositorio:"
+            echo "$prohibidos"
+            exit 1
+          fi
+
+  publicar:
+    name: Subir a Hostinger
+    needs: revisar
+    runs-on: ubuntu-latest
+    environment: produccion
+    env:
+      FTP_SERVIDOR: ${{ secrets.FTP_SERVIDOR }}
+      FTP_USUARIO: ${{ secrets.FTP_USUARIO }}
+      FTP_CLAVE: ${{ secrets.FTP_CLAVE }}
+      FTP_RUTA: ${{ vars.FTP_RUTA || './' }}
+      FTP_PROTOCOLO: ${{ vars.FTP_PROTOCOLO || 'ftps' }}
+      SIMULAR: ${{ github.event_name == 'workflow_dispatch' && inputs.simular }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ¿Está configurado el acceso FTP?
+        id: config
+        run: |
+          if [ -z "$FTP_SERVIDOR" ] || [ -z "$FTP_USUARIO" ] || [ -z "$FTP_CLAVE" ]; then
+            echo "::warning::Faltan los secretos FTP_SERVIDOR, FTP_USUARIO o FTP_CLAVE. No se publicó nada; revisa en-busca-de-closet-web/LEEME.md."
+            echo "listo=no" >> "$GITHUB_OUTPUT"
+          else
+            ruta="${FTP_RUTA%/}/"
+            echo "ruta=$ruta" >> "$GITHUB_OUTPUT"
+            echo "listo=si" >> "$GITHUB_OUTPUT"
+            echo "Destino: $FTP_PROTOCOLO://$FTP_SERVIDOR/$ruta · simular=$SIMULAR"
+          fi
+
+      # Sólo sube lo que cambió desde la última publicación (guarda un registro oculto
+      # .ftp-deploy-sync-state.json en el servidor; el .htaccess impide verlo desde internet).
+      - name: Subir app/ (código privado)
+        if: steps.config.outputs.listo == 'si'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ env.FTP_SERVIDOR }}
+          username: ${{ env.FTP_USUARIO }}
+          password: ${{ env.FTP_CLAVE }}
+          protocol: ${{ env.FTP_PROTOCOLO }}
+          local-dir: ./en-busca-de-closet-web/app/
+          server-dir: ${{ steps.config.outputs.ruta }}app/
+          dry-run: ${{ env.SIMULAR == 'true' }}
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            config.php
+            datos/**
+
+      - name: Subir public_html/ (tienda y panel)
+        if: steps.config.outputs.listo == 'si'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ env.FTP_SERVIDOR }}
+          username: ${{ env.FTP_USUARIO }}
+          password: ${{ env.FTP_CLAVE }}
+          protocol: ${{ env.FTP_PROTOCOLO }}
+          local-dir: ./en-busca-de-closet-web/public_html/
+          server-dir: ${{ steps.config.outputs.ruta }}public_html/
+          dry-run: ${{ env.SIMULAR == 'true' }}
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            uploads/**
+
+      - name: Resumen
+        if: steps.config.outputs.listo == 'si'
+        run: |
+          if [ "$SIMULAR" = "true" ]; then
+            echo "### Simulación terminada: no se cambió nada en Hostinger" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Publicado en https://enbuscadecloset.com" >> "$GITHUB_STEP_SUMMARY"
+          fi

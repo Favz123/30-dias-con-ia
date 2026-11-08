@@ -464,7 +464,7 @@ function preguntas_frecuentes(): array
 {
     return [
         ['¿Qué métodos de pago aceptan?',
-            '<p><strong>Transferencia, depósito, tarjeta o efectivo.</strong></p><p>En caso de ser envío, el pago sólo puede ser por transferencia o depósito.</p><p>Si eres de Campeche, el pago puede ser en efectivo, transferencia o con nuestra terminal para tarjeta de débito y crédito.</p>'],
+            '<p><strong>Transferencia, depósito, tarjeta o efectivo.</strong></p><p>En caso de ser envío, el pago se puede realizar por transferencia, depósito o con link de pago para pago con tarjeta de crédito.</p><p>Si eres de Campeche, el pago puede ser en efectivo o transferencia, y en tienda física contamos con terminal para pago con tarjeta de débito/crédito.</p>'],
         ['¿Se puede acumular?',
             '<p><strong>Sí</strong>, siempre y cuando las prendas queden completamente saldadas.</p><p>Dispones de <strong>3 meses</strong> para acumular prendas y aprovechar al máximo el costo del envío.</p>'],
         ['¿Cómo funcionan los apartados?',
@@ -493,7 +493,7 @@ function jsonld_tienda(): array
         'description' => 'Tienda de ropa de segunda mano y ropa deportiva de marca en Campeche, con envíos a todo México.',
         'address' => [
             '@type' => 'PostalAddress',
-            'streetAddress' => 'Av. Colosio #54, entre Calle 20 y Calle Victoria, Col. San José',
+            'streetAddress' => 'Av. Colosio #54, entre Calle 22 y Calle Victoria, Col. San José',
             'addressLocality' => 'San Francisco de Campeche',
             'addressRegion' => 'Campeche',
             'addressCountry' => 'MX',

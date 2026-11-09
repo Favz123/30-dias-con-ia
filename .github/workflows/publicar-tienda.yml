@@ -136,6 +136,36 @@ jobs:
           echo "listo=si" >> "$GITHUB_OUTPUT"
           echo "Destino: $FTP_PROTOCOLO://$servidor:$puerto/$ruta · simular=$SIMULAR"
 
+      # Hostinger corta de golpe (RST) el canal de datos cuando se pide un archivo que no
+      # existe; la acción lo toma como error fatal en la PRIMERA publicación, al buscar su
+      # registro .ftp-deploy-sync-state.json. Por eso, si falta, se crea uno vacío antes.
+      # La existencia se consulta con SIZE (sin canal de datos); sólo se sube si falta.
+      - name: Crear registro inicial si falta
+        if: steps.config.outputs.listo == 'si' && env.SIMULAR != 'true'
+        env:
+          RUTA: ${{ steps.config.outputs.ruta }}
+        run: |
+          set -euo pipefail
+          netrc="$RUNNER_TEMP/.netrc-ftp"
+          umask 077
+          entre_comillas() { local v="${1//\\/\\\\}"; printf '"%s"' "${v//\"/\\\"}"; }
+          printf 'machine %s login %s password %s\n' "$FTP_HOST" \
+            "$(entre_comillas "$FTP_USUARIO_LIMPIO")" "$(entre_comillas "$FTP_CLAVE")" > "$netrc"
+          trap 'rm -f "$netrc"' EXIT
+          tls=()
+          if [ "$FTP_PROTOCOLO" = "ftps" ]; then tls=(--ssl-reqd); fi
+          vacio="$RUNNER_TEMP/registro-vacio.json"
+          echo '{"description":"Registro inicial creado por la automatizacion; se reemplaza en la primera publicacion.","version":"1.0.0","generatedTime":0,"data":[]}' > "$vacio"
+          for carpeta in app public_html; do
+            url="ftp://$FTP_HOST:$FTP_PUERTO/${RUTA}${carpeta}/.ftp-deploy-sync-state.json"
+            if curl -sS --netrc-file "$netrc" "${tls[@]}" --head "$url" > /dev/null 2>&1; then
+              echo "$carpeta/: ya tiene registro de publicación."
+            else
+              curl -sS --netrc-file "$netrc" "${tls[@]}" --ftp-create-dirs -T "$vacio" "$url"
+              echo "$carpeta/: se creó el registro inicial."
+            fi
+          done
+
       # Sólo sube lo que cambió desde la última publicación (guarda un registro oculto
       # .ftp-deploy-sync-state.json en el servidor; el .htaccess impide verlo desde internet).
       - name: Subir app/ (código privado)

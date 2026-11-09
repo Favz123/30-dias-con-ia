@@ -12,7 +12,7 @@ Bitácora de mi plan de 30 días usando IA (Claude) para generar ingresos, busca
 | Recepción en apuros | Juego de navegador: eres la recepcionista de un consultorio y debes contestar los WhatsApp de los pacientes antes de que se acabe el tiempo. Cada vez llegan más rápido. Funciona en celular. | [Jugar](https://favz123.github.io/30-dias-con-ia/recepcion-en-apuros/) · [Código](recepcion-en-apuros/index.html) |
 | Chatbot de consultorio | Asistente estilo WhatsApp con la API de Claude para un consultorio ficticio: horarios, precios y solicitudes de cita. Publicado gratis en Vercel. | [Probar](https://chatbot-consultorio-claude.vercel.app/) · [Código](chatbot-consultorio/) |
 | En Busca de Closet (prototipo) | Primer catálogo web estático (en lila) para una tienda de ropa de segunda mano en Campeche: prendas por talla con botón a WhatsApp, dinámica de compra, envíos, preguntas frecuentes y ubicación. Optimizado para SEO. | [Ver sitio](https://favz123.github.io/30-dias-con-ia/en-busca-de-closet/) · [Código](en-busca-de-closet/index.html) |
-| En Busca de Closet (tienda en línea) | Tienda real en PHP + MySQL en Hostinger: catálogo de cientos de prendas en 5 tallas (XCH a XG) con búsqueda, ficha por prenda y botón a WhatsApp. Incluye un panel para que la dueña suba prendas desde el celular (una por una o hasta 40 a la vez), las marque como disponibles, apartadas o vendidas y administre contraseñas. | [Ver tienda](https://enbuscadecloset.com) · [Código](en-busca-de-closet-web/) |
+| En Busca de Closet (tienda en línea) | Tienda real en PHP + MySQL en Hostinger: catálogo de cientos de prendas en 5 tallas (XCH a XG) con búsqueda, ficha por prenda y botón a WhatsApp. Incluye un panel para que la dueña suba prendas desde el celular (una por una o hasta 40 a la vez), las marque como disponibles, apartadas o vendidas y administre contraseñas. Cada cambio se publica solo en Hostinger con GitHub Actions. | [Ver tienda](https://enbuscadecloset.com) · [Código](en-busca-de-closet-web/) |
 
 ## Bitácora
 
@@ -48,4 +48,14 @@ Bitácora de mi plan de 30 días usando IA (Claude) para generar ingresos, busca
 - Panel para la dueña desde el celular: subir prendas con foto, carga masiva desde Google Drive, estados disponible / apartada / vendida y manejo de contraseñas. Manual de usuario entregado.
 - Dominio, SSL, base de datos y Google Search Console (con sitemap) configurados.
 - Pruebas reales: se corrigieron un error 500 del buscador que sólo ocurría en MySQL y un detalle visual del paginador, y se agregó la talla Extra chica a petición de la dueña.
+- Mejoras de SEO (textos alternativos, pies de foto, sitemap con imágenes y datos estructurados), favicon propio y crédito de [Favzstudio.com](https://favzstudio.com) en el pie del sitio.
 - Prompt clave: "Eres un senior web developer and designer con 20 años de experiencia. Diséñame un sitio web llamativo en color lila. Tomando en cuenta el SEO, el sitio web es un catálogo estático dividido en 4 tallas [...] Cada una tiene un botón que lleva a WhatsApp".
+
+### Día 7 (08–09/11/2026)
+- Cambios pedidos por la dueña en [enbuscadecloset.com](https://enbuscadecloset.com): textos de compra y métodos de pago, dirección corregida y portada nueva con 5 fotos de la tienda y el lema "Ropa deportiva secondhand".
+- Publicación automática: al fusionar un cambio en GitHub, una automatización revisa el código PHP y sube por FTPS a Hostinger sólo los archivos que cambiaron, sin tocar la configuración ni las fotos de las prendas. Ya no hace falta pasar ZIP ni mover archivos a mano.
+- Depuración en producción, reproduciendo cada error antes de corregirlo:
+    - el servidor FTP se guardó con un formato que no existía, así que ahora se limpia solo y acepta la IP;
+    - Hostinger corta la conexión cuando se pide un archivo inexistente, lo que hacía fallar la primera publicación; se resolvió creando antes el registro inicial;
+    - el certificado de seguridad no coincidía con la IP; ahora se omite ese paso de ayuda sin desactivar la verificación.
+- Prompt clave: "¿Qué puedes hacer con acceso a Hostinger?" (la respuesta: mejor que GitHub publique solo, sin darle a la IA las llaves del hosting).

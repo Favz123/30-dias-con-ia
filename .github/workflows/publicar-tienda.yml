@@ -158,12 +158,21 @@ jobs:
           echo '{"description":"Registro inicial creado por la automatizacion; se reemplaza en la primera publicacion.","version":"1.0.0","generatedTime":0,"data":[]}' > "$vacio"
           for carpeta in app public_html; do
             url="ftp://$FTP_HOST:$FTP_PUERTO/${RUTA}${carpeta}/.ftp-deploy-sync-state.json"
-            if curl -sS --netrc-file "$netrc" "${tls[@]}" --head "$url" > /dev/null 2>&1; then
+            rc=0
+            curl -sS --netrc-file "$netrc" "${tls[@]}" --head "$url" > /dev/null 2>&1 || rc=$?
+            if [ "$rc" -eq 0 ]; then
               echo "$carpeta/: ya tiene registro de publicación."
-            else
-              curl -sS --netrc-file "$netrc" "${tls[@]}" --ftp-create-dirs -T "$vacio" "$url"
-              echo "$carpeta/: se creó el registro inicial."
+              continue
             fi
+            # 60 = no se pudo verificar el certificado TLS. Pasa con FTPS al usar la IP: el
+            # certificado de Hostinger es para un nombre. No se desactiva la verificación; sólo
+            # se omite este paso de ayuda (el registro ya existe si la tienda se publicó antes).
+            if [ "$rc" -eq 60 ]; then
+              echo "::notice::No se pudo verificar el certificado FTPS para ese servidor (normal si FTP_SERVIDOR es una IP). Se omite crear el registro inicial; ya existe si la tienda se publicó antes."
+              exit 0
+            fi
+            curl -sS --netrc-file "$netrc" "${tls[@]}" --ftp-create-dirs -T "$vacio" "$url"
+            echo "$carpeta/: se creó el registro inicial."
           done
 
       # Sólo sube lo que cambió desde la última publicación (guarda un registro oculto

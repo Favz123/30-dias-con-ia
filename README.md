@@ -55,7 +55,7 @@ Bitácora de mi plan de 30 días usando IA (Claude) para generar ingresos, busca
 - Cambios pedidos por la dueña en [enbuscadecloset.com](https://enbuscadecloset.com): textos de compra y métodos de pago, dirección corregida y portada nueva con 5 fotos de la tienda y el lema "Ropa deportiva secondhand".
 - Publicación automática: al fusionar un cambio en GitHub, una automatización revisa el código PHP y sube por FTPS a Hostinger sólo los archivos que cambiaron, sin tocar la configuración ni las fotos de las prendas. Ya no hace falta pasar ZIP ni mover archivos a mano.
 - Depuración en producción, reproduciendo cada error antes de corregirlo:
-    - el servidor FTP se guardó con un formato que no existía, así que ahora se limpia solo y acepta la IP;
+    - el nombre del servidor FTP no existía y la comprobación rechazaba también la IP; ahora acepta la IP y limpia el valor si se pega con `ftp://`, diagonales o espacios;
     - Hostinger corta la conexión cuando se pide un archivo inexistente, lo que hacía fallar la primera publicación; se resolvió creando antes el registro inicial;
     - el certificado de seguridad no coincidía con la IP; ahora se omite ese paso de ayuda sin desactivar la verificación.
 - Prompt clave: "¿Qué puedes hacer con acceso a Hostinger?" (la respuesta: mejor que GitHub publique solo, sin darle a la IA las llaves del hosting).

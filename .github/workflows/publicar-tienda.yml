@@ -21,7 +21,7 @@ on:
     paths:
       - "en-busca-de-closet-web/app/**"
       - "en-busca-de-closet-web/public_html/**"
-      - ".github/workflows/publicar-tienda.yml"
+      # Un cambio sólo de este archivo no publica: pruébalo a mano con "Sólo simular".
   workflow_dispatch:
     inputs:
       simular:
@@ -42,7 +42,7 @@ jobs:
     name: Revisar el código PHP
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Sintaxis de todos los archivos PHP
         run: |
@@ -81,7 +81,7 @@ jobs:
       FTP_PROTOCOLO: ${{ vars.FTP_PROTOCOLO || 'ftps' }}
       SIMULAR: ${{ github.event_name == 'workflow_dispatch' && inputs.simular }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: ¿Está configurado el acceso FTP?
         id: config
@@ -119,7 +119,9 @@ jobs:
             echo "::error::FTP_SERVIDOR quedó vacío al limpiarlo. Guarda sólo la IP de FTP de hPanel (ej. 185.123.45.67) o el nombre del servidor, sin ftp://."
             exit 1
           fi
-          if ! getent hosts "$servidor" > /dev/null; then
+          # "ahosts" busca el nombre → IP; con una IP la acepta tal cual. ("hosts" con una IP
+          # hace la búsqueda inversa y falla en IPs de hosting sin nombre registrado.)
+          if ! getent ahosts "$servidor" > /dev/null; then
             echo "::error::El servidor de FTP_SERVIDOR no existe (no se encontró en internet). En hPanel → Archivos → Cuentas FTP copia la «IP de FTP» y guárdala tal cual en el secreto FTP_SERVIDOR, sin ftp:// ni diagonales."
             exit 1
           fi

@@ -64,19 +64,15 @@ function enlace_listado(?string $talla, string $q, string $marca, int $pagina = 
     return $base . ($params ? '?' . http_build_query($params) : '') . '#catalogo';
 }
 
-// Fotos para el collage de la portada: las 3 más recientes disponibles.
-$collage = [];
-if (!$listado) {
-    foreach ($porTalla as $lista) {
-        foreach ($lista as $p) {
-            if ($p['estado'] === 'disponible' && $p['foto'] !== '') {
-                $collage[] = $p;
-                break;
-            }
-        }
-    }
-    $collage = array_slice($collage, 0, 3);
-}
+// Fotos fijas del collage de la portada (public_html/assets/img/portada/).
+// La última va al frente, en el centro.
+$collage = [
+    ['conjunto-adidas-top-negro-short-azul-xch', 720, 678, 'talla extra chica', 'Conjunto Adidas de top deportivo negro y short azul claro, talla extra chica'],
+    ['conjunto-adidas-playera-negra-short-blanco-ch', 720, 701, 'talla chica', 'Conjunto Adidas de playera negra y short blanco, talla chica'],
+    ['conjunto-nike-top-negro-short-nike-pro-gris-m', 720, 673, 'talla mediana', 'Conjunto Nike de top Nike Running negro y short Nike Pro gris, talla mediana'],
+    ['conjunto-adidas-playera-rosa-short-negro-g', 720, 694, 'talla grande', 'Conjunto Adidas de playera rosa y short negro, talla grande'],
+    ['variedad-ropa-deportiva-nike-adidas-gymshark-ch', 707, 720, 'más de 100 modelos', 'Variedad de ropa deportiva secondhand Nike, Adidas y Gymshark en talla chica'],
+];
 
 require APP_DIR . '/vistas/encabezado.php';
 ?>
@@ -86,8 +82,8 @@ require APP_DIR . '/vistas/encabezado.php';
     <div class="wrap hero-grid">
       <div>
         <span class="eyebrow">📍 Campeche · Envíos a todo México</span>
-        <h1 id="titulo">En Busca de Closet <span class="script">ropa con segunda historia</span></h1>
-        <p class="lead">Prendas de marca seleccionadas una por una. Elige tu talla, mándanos WhatsApp y apártala antes que nadie.</p>
+        <h1 id="titulo">En Busca de Closet <span class="script">Ropa deportiva secondhand</span></h1>
+        <p class="lead">Nosotros ponemos las prendas y tú el estilo. Escoge entre nuestros más de 100 modelos, mándanos WhatsApp y llévate tus favoritos.</p>
         <div class="hero-actions">
           <a class="btn btn-dark" href="#catalogo">Ver catálogo</a>
           <a class="btn btn-light" href="#como-comprar">¿Cómo comprar?</a>
@@ -98,9 +94,9 @@ require APP_DIR . '/vistas/encabezado.php';
           <?php endforeach; ?>
         </ul>
       </div>
-      <div class="collage">
-        <?php foreach ($collage as $i => $p): ?>
-          <figure class="polaroid p<?= $i + 1 ?>"><img src="<?= e(foto_url($p, true)) ?>" width="600" height="600" alt="<?= e(texto_alt($p)) ?>"<?= $i === 0 ? ' fetchpriority="high"' : '' ?>><figcaption>talla <?= e(mb_strtolower(TALLAS[$p['talla']]['nombre'])) ?></figcaption></figure>
+      <div class="collage cinco">
+        <?php foreach ($collage as $i => [$archivo, $ancho, $alto, $pie, $alt]): ?>
+          <figure class="polaroid p<?= $i + 1 ?>"><img src="/assets/img/portada/<?= e($archivo) ?>.webp" width="<?= $ancho ?>" height="<?= $alto ?>" alt="<?= e($alt) ?>"<?= $i === 4 ? ' fetchpriority="high"' : ' loading="lazy"' ?> decoding="async"><figcaption><?= e($pie) ?></figcaption></figure>
         <?php endforeach; ?>
         <img class="hero-logo" src="/assets/img/logo.webp" width="512" height="512" alt="Logo de En Busca de Closet: gancho de ropa con el nombre de la tienda">
       </div>

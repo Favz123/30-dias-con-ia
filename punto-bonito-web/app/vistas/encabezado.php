@@ -33,10 +33,19 @@ $waGeneral = whatsapp_link('¡Hola, Punto Bonito! 👋 Vi su catálogo en línea
 <meta property="og:description" content="<?= e($descripcion) ?>">
 <meta property="og:url" content="<?= e(url($canonical)) ?>">
 <meta property="og:image" content="<?= e($og_imagen) ?>">
+<?php if (str_ends_with($og_imagen, '/og-image.jpg')): ?>
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<?php endif; ?>
 <meta property="og:image:alt" content="<?= e($og_imagen_alt) ?>">
 <meta name="twitter:image" content="<?= e($og_imagen) ?>">
 <meta name="twitter:image:alt" content="<?= e($og_imagen_alt) ?>">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<?= e($titulo) ?>">
+<meta name="twitter:description" content="<?= e($descripcion) ?>">
+<?php if (cfg('google_verificacion')): ?>
+<meta name="google-site-verification" content="<?= e((string) cfg('google_verificacion')) ?>">
+<?php endif; ?>
 <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48 64x64">
 <link rel="icon" type="image/png" sizes="96x96" href="/assets/img/favicon-96.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">

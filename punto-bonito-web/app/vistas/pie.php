@@ -9,8 +9,11 @@
       <p>Bolsos, monederos, tazas, termos, aretes y mucho más.</p>
       <?php if (cfg('direccion')): ?><p>📍 <?= e((string) cfg('direccion')) ?></p><?php endif; ?>
     </div>
+    <nav class="foot-cats" aria-label="Categorías">
+      <?php foreach (CATEGORIAS as $c): ?><a href="/categoria/<?= e($c['slug']) ?>"><?= e($c['nombre']) ?></a><?php endforeach; ?>
+    </nav>
     <div class="foot-links">
-      <a href="<?= e($waGeneral) ?>" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg> WhatsApp</a>
+      <a href="<?= e($waGeneral) ?>" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg> <?= e(whatsapp_configurado() ? telefono_legible() : 'WhatsApp') ?></a>
       <?php if (cfg('instagram')): ?>
         <a href="https://www.instagram.com/<?= e((string) cfg('instagram')) ?>/" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-ig"/></svg> @<?= e((string) cfg('instagram')) ?></a>
       <?php endif; ?>

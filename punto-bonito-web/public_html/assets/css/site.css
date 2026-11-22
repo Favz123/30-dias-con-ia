@@ -424,3 +424,6 @@ section{padding:84px 0}
 .foot-links a:hover{background:var(--amarillo);color:var(--ink)}
 .credit a{color:var(--amarillo)}
 .foot .brand span{color:#fff}
+.foot-cats{display:flex;flex-wrap:wrap;gap:6px 14px;max-width:420px}
+.foot-cats a{color:#f7d3e2;text-decoration:none;font-weight:700;font-size:.92rem}
+.foot-cats a:hover{color:var(--amarillo);text-decoration:underline}

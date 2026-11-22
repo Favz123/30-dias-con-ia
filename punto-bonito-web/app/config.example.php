@@ -6,18 +6,24 @@
  */
 return [
     // Dirección pública del sitio, sin diagonal al final.
-    'sitio_url' => 'https://puntobonito.com',
+    'sitio_url' => 'https://puntobonito.store',
 
-    // ⚠️ PENDIENTE: WhatsApp de la tienda: 52 + 10 dígitos, sin espacios ni signos. Ej: '529811234567'
-    // Mientras diga 520000000000, el sitio muestra un aviso de "número pendiente".
-    'whatsapp' => '520000000000',
+    // WhatsApp de la tienda: 52 + 10 dígitos, sin espacios ni signos.
+    'whatsapp' => '529811050953',
 
     // Redes sociales (opcional; déjalas vacías si no hay).
     'instagram' => '',   // sólo el usuario, sin @. Ej: 'puntobonito'
     'facebook' => '',    // dirección completa de la página. Ej: 'https://www.facebook.com/puntobonito'
 
-    // Dirección de la tienda física (opcional). Si se llena, aparece en el pie de página.
-    'direccion' => '',
+    // Ubicación (opcional). Ayuda a salir en Google cuando buscan "bolsos en <ciudad>".
+    // La dirección, si se llena, aparece en el pie de página.
+    'ciudad' => '',      // Ej: 'San Francisco de Campeche'
+    'estado' => '',      // Ej: 'Campeche'
+    'direccion' => '',   // Ej: 'Calle 10 #25, Col. Centro'
+
+    // Código de verificación de Google Search Console (opcional): sólo el valor de content="…"
+    // de la etiqueta <meta name="google-site-verification">. Si verificas por DNS no hace falta.
+    'google_verificacion' => '',
 
     // Días que un producto vendido se sigue mostrando con la etiqueta "Vendido".
     'dias_vendido' => 3,

@@ -1,0 +1,225 @@
+# Publica Punto Bonito (puntobonito.store) en Hostinger por FTP
+# cada vez que se fusiona en main un cambio de punto-bonito-web/app o /public_html.
+# Es la misma automatización de En Busca de Closet (publicar-tienda.yml), con su propia ruta.
+#
+# Configuración (una sola vez), en GitHub → Settings → Secrets and variables → Actions:
+#   Secrets:   PB_FTP_SERVIDOR, PB_FTP_USUARIO, PB_FTP_CLAVE
+#              Si no existen, se usan FTP_SERVIDOR, FTP_USUARIO y FTP_CLAVE (los de En Busca de
+#              Closet): sirven si los dos sitios están en la misma cuenta de Hostinger y es la
+#              cuenta FTP principal.
+#   Variables: PB_FTP_RUTA   carpeta del dominio vista desde la cuenta FTP, donde están
+#                            app/ y public_html/. Default: domains/puntobonito.store/
+#              FTP_PROTOCOLO ftps (recomendado) o ftp. Default: ftps
+#
+# Nunca sube ni borra app/config.php, app/datos/ ni las fotos de public_html/uploads/.
+# Para probar sin cambiar nada: Actions → "Publicar Punto Bonito" → Run workflow → "Sólo simular".
+
+name: Publicar Punto Bonito
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "punto-bonito-web/app/**"
+      - "punto-bonito-web/public_html/**"
+      # Un cambio sólo de este archivo no publica: pruébalo a mano con "Sólo simular".
+  workflow_dispatch:
+    inputs:
+      simular:
+        description: "Sólo simular (muestra qué subiría, sin cambiar nada)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+# Nunca dos publicaciones a la vez: la segunda espera a que termine la primera.
+concurrency:
+  group: publicar-punto-bonito
+  cancel-in-progress: false
+
+jobs:
+  revisar:
+    name: Revisar el código PHP
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Sintaxis de todos los archivos PHP
+        run: |
+          set -euo pipefail
+          php -v | head -1
+          errores=0
+          while IFS= read -r -d '' f; do
+            php -l "$f" >/dev/null || errores=$((errores + 1))
+          done < <(find punto-bonito-web/app punto-bonito-web/public_html -name '*.php' -print0)
+          if [ "$errores" -gt 0 ]; then
+            echo "::error::$errores archivo(s) PHP con errores de sintaxis. No se publica nada."
+            exit 1
+          fi
+          echo "Todos los archivos PHP están bien."
+
+      - name: Que no se cuelen contraseñas ni datos de prueba
+        run: |
+          set -euo pipefail
+          prohibidos=$(git ls-files punto-bonito-web | grep -E '(^|/)config\.php$|\.sqlite$|/uploads/.+\.(webp|jpe?g|png)$' || true)
+          if [ -n "$prohibidos" ]; then
+            echo "::error::Hay archivos que no deben publicarse en el repositorio:"
+            echo "$prohibidos"
+            exit 1
+          fi
+
+  publicar:
+    name: Subir a Hostinger
+    needs: revisar
+    runs-on: ubuntu-latest
+    environment: produccion
+    env:
+      FTP_SERVIDOR: ${{ secrets.PB_FTP_SERVIDOR || secrets.FTP_SERVIDOR }}
+      FTP_USUARIO: ${{ secrets.PB_FTP_USUARIO || secrets.FTP_USUARIO }}
+      FTP_CLAVE: ${{ secrets.PB_FTP_CLAVE || secrets.FTP_CLAVE }}
+      FTP_RUTA: ${{ vars.PB_FTP_RUTA || 'domains/puntobonito.store/' }}
+      FTP_PROTOCOLO: ${{ vars.FTP_PROTOCOLO || 'ftps' }}
+      SIMULAR: ${{ github.event_name == 'workflow_dispatch' && inputs.simular }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: ¿Está configurado el acceso FTP?
+        id: config
+        run: |
+          if [ -z "$FTP_SERVIDOR" ] || [ -z "$FTP_USUARIO" ] || [ -z "$FTP_CLAVE" ]; then
+            echo "::warning::Faltan los secretos PB_FTP_* (o FTP_*). No se publicó nada; revisa punto-bonito-web/LEEME.md."
+            echo "listo=no" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Limpia FTP_SERVIDOR tal como suele copiarse de hPanel:
+          # "ftp://puntobonito.store/", "https://...", "usuario@host", "host:21", espacios o saltos de línea.
+          servidor="$(printf '%s' "$FTP_SERVIDOR" | tr -d '[:space:]')"
+          esquema=""
+          case "$servidor" in *://*) esquema="${servidor%%://*}"; servidor="${servidor#*://}" ;; esac
+          servidor="${servidor%%/*}"
+          servidor="${servidor##*@}"
+          puerto=21
+          case "$servidor" in
+            *:*) p="${servidor##*:}"; servidor="${servidor%:*}"
+                 case "$p" in ''|*[!0-9]*) ;; *) puerto="$p" ;; esac ;;
+          esac
+          usuario="$(printf '%s' "$FTP_USUARIO" | tr -d '[:space:]')"
+          echo "::add-mask::$servidor"
+          echo "::add-mask::$usuario"
+
+          if [ "$servidor" != "$FTP_SERVIDOR" ]; then
+            echo "::notice::Se limpió FTP_SERVIDOR automáticamente (tenía ${esquema:+el prefijo $esquema://, }diagonales, puerto o espacios). Conviene guardarlo sólo como el nombre o la IP."
+          fi
+          if [ "$esquema" = "sftp" ] || [ "$puerto" = "22" ] || [ "$puerto" = "65002" ]; then
+            echo "::warning::Los datos parecen de SFTP (puerto $puerto). Esta automatización usa FTP/FTPS por el puerto 21; se usará el 21."
+            puerto=21
+          fi
+          if [ -z "$servidor" ]; then
+            echo "::error::FTP_SERVIDOR quedó vacío al limpiarlo. Guarda sólo la IP de FTP de hPanel (ej. 185.123.45.67) o el nombre del servidor, sin ftp://."
+            exit 1
+          fi
+          # "ahosts" busca el nombre → IP; con una IP la acepta tal cual. ("hosts" con una IP
+          # hace la búsqueda inversa y falla en IPs de hosting sin nombre registrado.)
+          if ! getent ahosts "$servidor" > /dev/null; then
+            echo "::error::El servidor de FTP_SERVIDOR no existe (no se encontró en internet). En hPanel → Archivos → Cuentas FTP copia la «IP de FTP» y guárdala tal cual en el secreto FTP_SERVIDOR, sin ftp:// ni diagonales."
+            exit 1
+          fi
+
+          {
+            echo "FTP_HOST=$servidor"
+            echo "FTP_PUERTO=$puerto"
+            echo "FTP_USUARIO_LIMPIO=$usuario"
+          } >> "$GITHUB_ENV"
+          ruta="${FTP_RUTA%/}/"
+          echo "ruta=$ruta" >> "$GITHUB_OUTPUT"
+          echo "listo=si" >> "$GITHUB_OUTPUT"
+          echo "Destino: $FTP_PROTOCOLO://$servidor:$puerto/$ruta · simular=$SIMULAR"
+
+      # Hostinger corta de golpe (RST) el canal de datos cuando se pide un archivo que no
+      # existe; la acción lo toma como error fatal en la PRIMERA publicación, al buscar su
+      # registro .ftp-deploy-sync-state.json. Por eso, si falta, se crea uno vacío antes.
+      # La existencia se consulta con SIZE (sin canal de datos); sólo se sube si falta.
+      - name: Crear registro inicial si falta
+        if: steps.config.outputs.listo == 'si' && env.SIMULAR != 'true'
+        env:
+          RUTA: ${{ steps.config.outputs.ruta }}
+        run: |
+          set -euo pipefail
+          netrc="$RUNNER_TEMP/.netrc-ftp"
+          umask 077
+          entre_comillas() { local v="${1//\\/\\\\}"; printf '"%s"' "${v//\"/\\\"}"; }
+          printf 'machine %s login %s password %s\n' "$FTP_HOST" \
+            "$(entre_comillas "$FTP_USUARIO_LIMPIO")" "$(entre_comillas "$FTP_CLAVE")" > "$netrc"
+          trap 'rm -f "$netrc"' EXIT
+          tls=()
+          if [ "$FTP_PROTOCOLO" = "ftps" ]; then tls=(--ssl-reqd); fi
+          vacio="$RUNNER_TEMP/registro-vacio.json"
+          echo '{"description":"Registro inicial creado por la automatizacion; se reemplaza en la primera publicacion.","version":"1.0.0","generatedTime":0,"data":[]}' > "$vacio"
+          for carpeta in app public_html; do
+            url="ftp://$FTP_HOST:$FTP_PUERTO/${RUTA}${carpeta}/.ftp-deploy-sync-state.json"
+            rc=0
+            curl -sS --netrc-file "$netrc" "${tls[@]}" --head "$url" > /dev/null 2>&1 || rc=$?
+            if [ "$rc" -eq 0 ]; then
+              echo "$carpeta/: ya tiene registro de publicación."
+              continue
+            fi
+            # 60 = no se pudo verificar el certificado TLS. Pasa con FTPS al usar la IP: el
+            # certificado de Hostinger es para un nombre. No se desactiva la verificación; sólo
+            # se omite este paso de ayuda (el registro ya existe si la tienda se publicó antes).
+            if [ "$rc" -eq 60 ]; then
+              echo "::notice::No se pudo verificar el certificado FTPS para ese servidor (normal si FTP_SERVIDOR es una IP). Se omite crear el registro inicial; ya existe si la tienda se publicó antes."
+              exit 0
+            fi
+            curl -sS --netrc-file "$netrc" "${tls[@]}" --ftp-create-dirs -T "$vacio" "$url"
+            echo "$carpeta/: se creó el registro inicial."
+          done
+
+      # Sólo sube lo que cambió desde la última publicación (guarda un registro oculto
+      # .ftp-deploy-sync-state.json en el servidor; el .htaccess impide verlo desde internet).
+      - name: Subir app/ (código privado)
+        if: steps.config.outputs.listo == 'si'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ env.FTP_HOST }}
+          port: ${{ env.FTP_PUERTO }}
+          username: ${{ env.FTP_USUARIO_LIMPIO }}
+          password: ${{ env.FTP_CLAVE }}
+          protocol: ${{ env.FTP_PROTOCOLO }}
+          local-dir: ./punto-bonito-web/app/
+          server-dir: ${{ steps.config.outputs.ruta }}app/
+          dry-run: ${{ env.SIMULAR == 'true' }}
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            config.php
+            datos/**
+
+      - name: Subir public_html/ (tienda y panel)
+        if: steps.config.outputs.listo == 'si'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ env.FTP_HOST }}
+          port: ${{ env.FTP_PUERTO }}
+          username: ${{ env.FTP_USUARIO_LIMPIO }}
+          password: ${{ env.FTP_CLAVE }}
+          protocol: ${{ env.FTP_PROTOCOLO }}
+          local-dir: ./punto-bonito-web/public_html/
+          server-dir: ${{ steps.config.outputs.ruta }}public_html/
+          dry-run: ${{ env.SIMULAR == 'true' }}
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            uploads/**
+
+      - name: Resumen
+        if: steps.config.outputs.listo == 'si'
+        run: |
+          if [ "$SIMULAR" = "true" ]; then
+            echo "### Simulación terminada: no se cambió nada en Hostinger" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Publicado en https://puntobonito.store" >> "$GITHUB_STEP_SUMMARY"
+          fi

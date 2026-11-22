@@ -40,18 +40,30 @@ if ($listado) {
 /* ---------- SEO ---------- */
 if ($categoria) {
     $cat = CATEGORIAS[$categoria];
-    $titulo = $cat['nombre'] . ' bonitos y originales | Punto Bonito';
-    $descripcion = $cat['nombre'] . ' de Punto Bonito: mira las fotos y pide el tuyo por WhatsApp. Apártalo o cómpralo con un mensaje.';
+    $titulo = $cat['nombre'] . en_ciudad() . ' · pide por WhatsApp | Punto Bonito';
+    $descripcion = $cat['descripcion'];
     $canonical = '/categoria/' . $cat['slug'] . ($pagina > 1 ? '?pagina=' . $pagina : '');
 } else {
-    $titulo = 'Punto Bonito | Bolsos, monederos, tazas, termos, aretes y más';
-    $descripcion = 'Catálogo de Punto Bonito: bolsos, monederos, cosmetiqueras, lapiceras, tazas, termos, vasos, llaveros, plumas, aretes, espejos y mandiles. Aparta o compra por WhatsApp.';
+    $titulo = 'Punto Bonito | Bolsos, monederos, tazas, termos y aretes' . en_ciudad();
+    $descripcion = 'Tienda de bolsos, monederos, cosmetiqueras, tazas, termos, vasos, llaveros, aretes, espejos y mandiles' . en_ciudad() . '. Mira las fotos y aparta o compra por WhatsApp.';
     $canonical = '/';
 }
 // Las búsquedas y los órdenes no se indexan para no duplicar contenido.
-$noindex = $q !== '' || $color !== '' || $orden !== 'nuevos' || ($slug !== '' && !$categoria);
+// Una categoría todavía vacía tampoco: Google la tomaría como página sin contenido.
+$noindex = $q !== '' || $color !== '' || $orden !== 'nuevos' || ($slug !== '' && !$categoria)
+    || ($categoria && $conteo[$categoria] === 0);
 if ($listado) {
     $jsonld = [jsonld_tienda()];
+    if ($categoria) {
+        $jsonld[] = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Inicio', 'item' => url('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => CATEGORIAS[$categoria]['nombre'], 'item' => url('/categoria/' . CATEGORIAS[$categoria]['slug'])],
+            ],
+        ];
+    }
     if ($productos) {
         $jsonld[] = jsonld_lista($productos, $categoria ? CATEGORIAS[$categoria]['nombre'] : 'Resultados de búsqueda');
     }
@@ -133,6 +145,7 @@ require APP_DIR . '/vistas/encabezado.php';
         <?php if ($categoria): ?>
           <h1 id="cat-title" style="font-size:clamp(2.4rem,6vw,4.2rem);font-weight:900"><?= e(CATEGORIAS[$categoria]['icono'] . ' ' . CATEGORIAS[$categoria]['nombre']) ?></h1>
           <span class="script">encuentra tu favorito</span>
+          <p><?= e(CATEGORIAS[$categoria]['descripcion']) ?></p>
         <?php elseif ($listado): ?>
           <h1 id="cat-title" style="font-size:clamp(2.4rem,6vw,4.2rem);font-weight:900">Catálogo</h1>
           <span class="script">resultados</span>

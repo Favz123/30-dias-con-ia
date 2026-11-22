@@ -34,20 +34,33 @@ mb_internal_encoding('UTF-8');
  * el slug (lo que aparece en la dirección: /categoria/bolsos), el nombre, el ícono y el color.
  * No cambies la clave de una categoría que ya tiene productos: es parte de su código (BOL-0001).
  * Colores disponibles: magenta, azul, naranja, amarillo, verde, morado, vino.
+ * La descripción aparece arriba de cada categoría y en Google (unos 120–155 caracteres).
  */
 const CATEGORIAS = [
-    'BOL' => ['slug' => 'bolsos',        'nombre' => 'Bolsos',        'singular' => 'Bolso',        'icono' => '👜', 'color' => 'magenta'],
-    'MON' => ['slug' => 'monederos',     'nombre' => 'Monederos',     'singular' => 'Monedero',     'icono' => '👛', 'color' => 'azul'],
-    'COS' => ['slug' => 'cosmetiqueras', 'nombre' => 'Cosmetiqueras', 'singular' => 'Cosmetiquera', 'icono' => '💄', 'color' => 'naranja'],
-    'LAP' => ['slug' => 'lapiceras',     'nombre' => 'Lapiceras',     'singular' => 'Lapicera',     'icono' => '✏️', 'color' => 'verde'],
-    'TAZ' => ['slug' => 'tazas',         'nombre' => 'Tazas',         'singular' => 'Taza',         'icono' => '☕', 'color' => 'morado'],
-    'TER' => ['slug' => 'termos',        'nombre' => 'Termos',        'singular' => 'Termo',        'icono' => '🧴', 'color' => 'amarillo'],
-    'VAS' => ['slug' => 'vasos',         'nombre' => 'Vasos',         'singular' => 'Vaso',         'icono' => '🥤', 'color' => 'vino'],
-    'LLA' => ['slug' => 'llaveros',      'nombre' => 'Llaveros',      'singular' => 'Llavero',      'icono' => '🔑', 'color' => 'magenta'],
-    'PLU' => ['slug' => 'plumas',        'nombre' => 'Plumas',        'singular' => 'Pluma',        'icono' => '🖊️', 'color' => 'azul'],
-    'ARE' => ['slug' => 'aretes',        'nombre' => 'Aretes',        'singular' => 'Aretes',       'icono' => '💎', 'color' => 'naranja'],
-    'ESP' => ['slug' => 'espejos',       'nombre' => 'Espejos',       'singular' => 'Espejo',       'icono' => '🪞', 'color' => 'verde'],
-    'MAN' => ['slug' => 'mandiles',      'nombre' => 'Mandiles',      'singular' => 'Mandil',       'icono' => '🧑‍🍳', 'color' => 'morado'],
+    'BOL' => ['slug' => 'bolsos',        'nombre' => 'Bolsos',        'singular' => 'Bolso',        'icono' => '👜', 'color' => 'magenta',
+              'descripcion' => 'Bolsos de mano, tote, cruzados y de playa en colores alegres. Elige el tuyo y apártalo o cómpralo por WhatsApp.'],
+    'MON' => ['slug' => 'monederos',     'nombre' => 'Monederos',     'singular' => 'Monedero',     'icono' => '👛', 'color' => 'azul',
+              'descripcion' => 'Monederos y carteras pequeñas con cierre, prácticos y bonitos para llevar tus monedas, tarjetas y llaves.'],
+    'COS' => ['slug' => 'cosmetiqueras', 'nombre' => 'Cosmetiqueras', 'singular' => 'Cosmetiquera', 'icono' => '💄', 'color' => 'naranja',
+              'descripcion' => 'Cosmetiqueras y neceseres para tu maquillaje y artículos de viaje, en diseños coloridos y fáciles de limpiar.'],
+    'LAP' => ['slug' => 'lapiceras',     'nombre' => 'Lapiceras',     'singular' => 'Lapicera',     'icono' => '✏️', 'color' => 'verde',
+              'descripcion' => 'Lapiceras y estuches escolares para guardar lápices, plumas y colores. Ideales para la escuela o la oficina.'],
+    'TAZ' => ['slug' => 'tazas',         'nombre' => 'Tazas',         'singular' => 'Taza',         'icono' => '☕', 'color' => 'morado',
+              'descripcion' => 'Tazas decorativas y personalizables para tu café o té, y para regalar en cumpleaños y fechas especiales.'],
+    'TER' => ['slug' => 'termos',        'nombre' => 'Termos',        'singular' => 'Termo',        'icono' => '🧴', 'color' => 'amarillo',
+              'descripcion' => 'Termos para mantener tus bebidas frías o calientes, en colores y diseños bonitos para llevar a todas partes.'],
+    'VAS' => ['slug' => 'vasos',         'nombre' => 'Vasos',         'singular' => 'Vaso',         'icono' => '🥤', 'color' => 'vino',
+              'descripcion' => 'Vasos con tapa y popote, reutilizables y llenos de color, para tus bebidas de todos los días.'],
+    'LLA' => ['slug' => 'llaveros',      'nombre' => 'Llaveros',      'singular' => 'Llavero',      'icono' => '🔑', 'color' => 'magenta',
+              'descripcion' => 'Llaveros bonitos y originales para tus llaves, tu bolso o tu mochila. Un detalle perfecto para regalar.'],
+    'PLU' => ['slug' => 'plumas',        'nombre' => 'Plumas',        'singular' => 'Pluma',        'icono' => '🖊️', 'color' => 'azul',
+              'descripcion' => 'Plumas y bolígrafos decorativos para escribir con estilo, tomar apuntes o regalar.'],
+    'ARE' => ['slug' => 'aretes',        'nombre' => 'Aretes',        'singular' => 'Aretes',       'icono' => '💎', 'color' => 'naranja',
+              'descripcion' => 'Aretes bonitos y ligeros para todos los días y para ocasiones especiales, en muchos estilos y colores.'],
+    'ESP' => ['slug' => 'espejos',       'nombre' => 'Espejos',       'singular' => 'Espejo',       'icono' => '🪞', 'color' => 'verde',
+              'descripcion' => 'Espejos de bolsillo y de mano, decorados y prácticos para retocarte donde estés.'],
+    'MAN' => ['slug' => 'mandiles',      'nombre' => 'Mandiles',      'singular' => 'Mandil',       'icono' => '🧑‍🍳', 'color' => 'morado',
+              'descripcion' => 'Mandiles de cocina bonitos y resistentes, para cocinar, hornear o atender tu negocio con estilo.'],
 ];
 const ESTADOS = ['disponible' => 'Disponible', 'apartado' => 'Apartado', 'vendido' => 'Vendido'];
 
@@ -193,11 +206,24 @@ function whatsapp_link(string $mensaje): string
     return 'https://wa.me/' . preg_replace('/\D/', '', (string) cfg('whatsapp')) . '?text=' . rawurlencode($mensaje);
 }
 
+/** " en Campeche" si se configuró la ciudad; vacío si no. Se usa en títulos y descripciones para Google. */
+function en_ciudad(): string
+{
+    return cfg('ciudad') ? ' en ' . cfg('ciudad') : '';
+}
+
 /** ¿Ya se configuró el número de WhatsApp de la tienda? (52 + 10 dígitos) */
 function whatsapp_configurado(): bool
 {
     $tel = preg_replace('/\D/', '', (string) cfg('whatsapp'));
     return strlen($tel) === 12 && $tel !== '520000000000';
+}
+
+/** El número de WhatsApp para mostrarlo: "981 105 0953". */
+function telefono_legible(): string
+{
+    $tel = substr(preg_replace('/\D/', '', (string) cfg('whatsapp')), -10);
+    return substr($tel, 0, 3) . ' ' . substr($tel, 3, 3) . ' ' . substr($tel, 6);
 }
 
 /**
@@ -526,16 +552,31 @@ function jsonld_tienda(): array
             'caption' => 'Logo de Punto Bonito',
         ],
         'image' => [url('/assets/img/logo-512.png')],
-        'description' => 'Bolsos, monederos, cosmetiqueras, tazas, termos, vasos, llaveros, aretes y más artículos bonitos. Pide por WhatsApp.',
+        'description' => 'Bolsos, monederos, cosmetiqueras, lapiceras, tazas, termos, vasos, llaveros, plumas, aretes, espejos y mandiles. Aparta o compra por WhatsApp.',
         'currenciesAccepted' => 'MXN',
         'areaServed' => 'MX',
+        'hasOfferCatalog' => [
+            '@type' => 'OfferCatalog',
+            'name' => 'Catálogo de Punto Bonito',
+            'itemListElement' => array_values(array_map(fn ($c) => [
+                '@type' => 'OfferCatalog',
+                'name' => $c['nombre'],
+                'url' => url('/categoria/' . $c['slug']),
+            ], CATEGORIAS)),
+        ],
     ];
     $redes = array_values(array_filter([cfg('instagram') ? 'https://www.instagram.com/' . cfg('instagram') . '/' : '', (string) cfg('facebook', '')]));
     if ($redes) {
         $tienda['sameAs'] = $redes;
     }
-    if (cfg('direccion')) {
-        $tienda['address'] = ['@type' => 'PostalAddress', 'streetAddress' => (string) cfg('direccion'), 'addressCountry' => 'MX'];
+    if (cfg('direccion') || cfg('ciudad')) {
+        $tienda['address'] = array_filter([
+            '@type' => 'PostalAddress',
+            'streetAddress' => (string) cfg('direccion'),
+            'addressLocality' => (string) cfg('ciudad'),
+            'addressRegion' => (string) cfg('estado'),
+            'addressCountry' => 'MX',
+        ]);
     }
     $tel = preg_replace('/\D/', '', (string) cfg('whatsapp'));
     if (whatsapp_configurado()) {

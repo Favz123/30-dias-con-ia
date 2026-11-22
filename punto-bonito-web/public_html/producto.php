@@ -37,7 +37,7 @@ $categoriaP = CATEGORIAS[$p['categoria']];
 $titulo = sprintf('%s%s | Punto Bonito', $p['nombre'], $p['precio'] !== null ? ' ' . precio($p['precio']) : '');
 $descripcion = $p['descripcion'] !== ''
     ? mb_substr($p['descripcion'], 0, 150)
-    : sprintf('%s de Punto Bonito (%s). Apártalo o cómpralo por WhatsApp.', $p['nombre'], mb_strtolower($categoriaP['nombre']));
+    : sprintf('%s%s de Punto Bonito%s. Mira la foto y apártalo o cómpralo por WhatsApp.', $p['nombre'], $p['precio'] !== null ? ' a ' . precio($p['precio']) : '', en_ciudad());
 $canonical = producto_url($p);
 $og_imagen = url(foto_url($p));
 $og_imagen_alt = texto_alt($p);
@@ -60,6 +60,7 @@ $producto = [
     'description' => $descripcion,
     'category' => $categoriaP['nombre'],
     'itemCondition' => 'https://schema.org/NewCondition',
+    'brand' => ['@type' => 'Brand', 'name' => 'Punto Bonito'],
 ];
 if ($p['color'] !== '') {
     $producto['color'] = $p['color'];

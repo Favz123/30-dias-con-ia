@@ -12,6 +12,7 @@
 #              FTP_PROTOCOLO ftps (recomendado) o ftp. Default: ftps
 #
 # Nunca sube ni borra app/config.php, app/datos/ ni las fotos de public_html/uploads/.
+# Sí sube uploads/.htaccess (impide ejecutar código en esa carpeta), porque este sitio es nuevo.
 # Para probar sin cambiar nada: Actions → "Publicar Punto Bonito" → Run workflow → "Sólo simular".
 
 name: Publicar Punto Bonito
@@ -213,7 +214,7 @@ jobs:
           exclude: |
             **/.git*
             **/.git*/**
-            uploads/**
+            uploads/*.webp
 
       - name: Resumen
         if: steps.config.outputs.listo == 'si'

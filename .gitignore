@@ -8,3 +8,8 @@ en-busca-de-closet-web/app/config.php
 en-busca-de-closet-web/app/datos/
 en-busca-de-closet-web/public_html/uploads/*
 !en-busca-de-closet-web/public_html/uploads/.htaccess
+# Punto Bonito (sitio PHP): datos locales y secretos
+punto-bonito-web/app/config.php
+punto-bonito-web/app/datos/
+punto-bonito-web/public_html/uploads/*
+!punto-bonito-web/public_html/uploads/.htaccess

@@ -30,6 +30,7 @@ $f = [
     'precio' => isset($p['precio']) ? (string) $p['precio'] : '',
     'detalle' => $p['detalle'] ?? '',
     'descripcion' => $p['descripcion'] ?? '',
+    'cantidad' => (string) ($p['cantidad'] ?? 1),
 ];
 $errores = [];
 
@@ -50,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':precio' => $f['precio'] === '' ? null : (int) $f['precio'],
             ':detalle' => $f['detalle'],
             ':descripcion' => $f['descripcion'],
+            ':cantidad' => (int) $f['cantidad'],
             ':act' => $ahora,
         ];
         $pdo = db();
@@ -57,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($p) {
                 $nuevaFoto = $hayFoto ? guardar_foto($archivo['tmp_name'], $p['codigo'], $f['nombre']) : null;
                 $sql = 'UPDATE prendas SET nombre = :nombre, marca = :marca, talla = :talla, precio = :precio,
-                        detalle = :detalle, descripcion = :descripcion, actualizado_en = :act'
+                        detalle = :detalle, descripcion = :descripcion, cantidad = :cantidad, actualizado_en = :act'
                     . ($nuevaFoto ? ', foto = :foto' : '') . ' WHERE id = :id';
                 $datos[':id'] = $p['id'];
                 if ($nuevaFoto) {
@@ -135,6 +137,11 @@ require APP_DIR . '/vistas/admin-encabezado.php';
     </label>
   </div>
 
+  <label>Piezas iguales <small>(misma foto y talla)</small>
+    <input name="cantidad" value="<?= e($f['cantidad']) ?>" inputmode="numeric" pattern="[0-9]*" maxlength="2" required>
+    <?php if ($p && $p['estado'] !== 'disponible'): ?><small class="hint">Esta prenda está <?= e(mb_strtolower(ESTADOS[$p['estado']])) ?>: las piezas cuentan cuando vuelva a estar disponible. Para ponerla disponible con una pieza nueva, toca “+1” abajo.</small><?php endif; ?>
+  </label>
+
   <label>Detalle destacado <small>(opcional)</small>
     <input name="detalle" value="<?= e($f['detalle']) ?>" maxlength="60" list="detalles" placeholder="Ej. Copas removibles">
     <datalist id="detalles"><option value="Copas removibles"><option value="Con licra interior"><option value="Nueva con etiqueta"><option value="Como nueva"><option value="Con bolsillos"></datalist>
@@ -154,15 +161,9 @@ require APP_DIR . '/vistas/admin-encabezado.php';
 
 <?php if ($p): ?>
   <section class="panel danger-zone">
-    <h2>Estado actual: <?= e(ESTADOS[$p['estado']]) ?></h2>
-    <form method="post" action="/admin/accion.php" class="states wide">
-      <?= csrf_campo() ?>
-      <input type="hidden" name="id" value="<?= $p['id'] ?>">
-      <input type="hidden" name="volver" value="<?= e($volver) ?>">
-      <button name="accion" value="disponible" class="st st-disp"<?= $p['estado'] === 'disponible' ? ' aria-pressed="true"' : '' ?>>Disponible</button>
-      <button name="accion" value="apartado" class="st st-apar"<?= $p['estado'] === 'apartado' ? ' aria-pressed="true"' : '' ?>>Apartada</button>
-      <button name="accion" value="vendido" class="st st-vend"<?= $p['estado'] === 'vendido' ? ' aria-pressed="true"' : '' ?>>Vendida</button>
-    </form>
+    <h2>Estado actual: <?= e(ESTADOS[$p['estado']]) ?><?= piezas_disponibles($p) > 1 ? ' · ' . e(texto_piezas($p['cantidad'])) : '' ?></h2>
+    <?php $volverA = $volver; $ancho = true; require APP_DIR . '/vistas/botones-estado.php'; ?>
+    <p class="hint">¿Te llegó otra pieza igual? Toca <b>+1</b>. Con varias piezas, “Vendí 1” y “Apartaron 1” descuentan una y la prenda sigue en el catálogo hasta la última.</p>
     <?php if ($p['estado'] === 'vendido' && prenda_visible($p)): ?>
       <form method="post" action="/admin/accion.php">
         <?= csrf_campo() ?>

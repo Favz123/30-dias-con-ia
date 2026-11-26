@@ -65,13 +65,15 @@ img{display:block;max-width:100%}
 .item-note{font-size:.82rem;font-weight:700;color:var(--amber)}
 .estado-vendido .item-note{color:var(--muted)}
 .item-note.bad{color:var(--bad)}
-.states{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--lila-100)}
+.states{display:grid;grid-template-columns:repeat(3,1fr) 52px;border-top:1px solid var(--lila-100)}
 .st{min-height:48px;border:0;background:#fff;font:700 .9rem system-ui,sans-serif;color:var(--muted);cursor:pointer;border-right:1px solid var(--lila-100)}
 .st:last-child{border-right:0}
 .st[aria-pressed="true"].st-disp{background:var(--ok-bg);color:var(--ok)}
 .st[aria-pressed="true"].st-apar{background:var(--amber-bg);color:var(--amber)}
 .st[aria-pressed="true"].st-vend{background:var(--ink);color:#fff}
 .st:active{transform:scale(.97)}
+.st-mas{color:var(--lila-700);font-size:1rem}
+.piezas{color:var(--ok)}
 .states.wide{border:1px solid var(--lila-200);border-radius:12px;overflow:hidden;margin-bottom:12px}
 
 .empty{text-align:center;background:#fff;border:2px dashed var(--lila-300);border-radius:var(--r);padding:28px 16px;color:var(--muted)}
@@ -134,6 +136,8 @@ img{display:block;max-width:100%}
 .lote-estado:empty{display:none}
 .lote-estado.bien{color:var(--ok)}
 .lote-estado.mal{color:var(--bad)}
+.lote-piezas{display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700;color:var(--muted)}
+.lote-piezas input{width:100%;min-width:0}
 .lote-item.falta{border-left-color:var(--bad);background:#fff7f7}
 .lote-item.trabajando{border-left-color:var(--amber);opacity:.8}
 .lote-item.listo{border-left-color:var(--ok);background:#f6fef8}

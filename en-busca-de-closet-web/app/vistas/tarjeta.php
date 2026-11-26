@@ -25,6 +25,7 @@ $h = 'h' . max(2, min(4, (int) ($nivelTitulo ?? 3)));
       <span class="code"><?= e($p['codigo']) ?></span>
     </div>
     <?php if ($p['detalle'] !== ''): ?><span class="feature"><?= e($p['detalle']) ?></span><?php endif; ?>
+    <?php if (piezas_disponibles($p) > 1): ?><span class="feature stock"><?= e(texto_piezas($p['cantidad'])) ?> disponibles</span><?php endif; ?>
     <?php if ($p['estado'] === 'disponible'): ?>
       <a class="btn btn-wa" href="<?= e(whatsapp_link(mensaje_prenda($p))) ?>" target="_blank" rel="noopener">
         <svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg> Me interesa

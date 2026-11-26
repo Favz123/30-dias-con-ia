@@ -21,7 +21,7 @@ $usuarioSesion = usuario_actual();
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Closet Panel">
-<link rel="stylesheet" href="/admin/admin.css?v=6">
+<link rel="stylesheet" href="/admin/admin.css?v=7">
 </head>
 <body>
 <header class="top">

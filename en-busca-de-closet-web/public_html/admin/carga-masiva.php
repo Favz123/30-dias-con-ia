@@ -16,7 +16,7 @@ require APP_DIR . '/vistas/admin-encabezado.php';
     </label>
     <details class="tips">
       <summary>💡 Tip: nombra las fotos y se llenan solas</summary>
-      <p>Si el archivo se llama, por ejemplo, <b>CH - Short Nike negro - 250.jpg</b>, se llenan la talla (CH, M, G, XG), la marca, el nombre y el precio automáticamente.</p>
+      <p>Si el archivo se llama, por ejemplo, <b>CH - Short Nike negro - 250.jpg</b>, se llenan la talla (XCH, CH, M, G, XG), la marca, el nombre y el precio automáticamente. Si tienes varias piezas iguales, agrega <b>x3</b> (por ejemplo, <b>CH - Short Nike negro - 250 - x3.jpg</b>) o escribe las piezas en cada foto: se sube una sola foto.</p>
       <p>Desde <b>Google Drive</b>: en la computadora, descarga la carpeta (se baja como ZIP), descomprímela y aquí selecciona todas las fotos con Ctrl+A. En el celular, al elegir fotos toca “Explorar” o “Archivos” y entra a Drive.</p>
     </details>
   </section>
@@ -61,7 +61,10 @@ require APP_DIR . '/vistas/admin-encabezado.php';
           <input data-campo="marca" list="marcas" placeholder="Marca" maxlength="60" aria-label="Marca">
           <input data-campo="precio" inputmode="numeric" placeholder="Precio" aria-label="Precio">
         </div>
-        <input data-campo="detalle" list="detalles" placeholder="Detalle (opcional)" maxlength="60" aria-label="Detalle">
+        <div class="two">
+          <input data-campo="detalle" list="detalles" placeholder="Detalle (opcional)" maxlength="60" aria-label="Detalle">
+          <label class="lote-piezas">Piezas <input data-campo="cantidad" value="1" inputmode="numeric" pattern="[0-9]*" maxlength="2" aria-label="Piezas iguales"></label>
+        </div>
         <p class="lote-estado" data-estado></p>
       </div>
       <button type="button" class="lote-quitar" data-quitar aria-label="Quitar esta foto">✕</button>
@@ -69,5 +72,5 @@ require APP_DIR . '/vistas/admin-encabezado.php';
   </template>
 </div>
 <script>window.CLOSET_MARCAS = <?= json_encode(marcas_sugeridas(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;</script>
-<script src="/admin/carga-masiva.js?v=3" defer></script>
+<script src="/admin/carga-masiva.js?v=4" defer></script>
 <?php require APP_DIR . '/vistas/admin-pie.php';

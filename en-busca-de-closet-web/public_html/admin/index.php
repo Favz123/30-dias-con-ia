@@ -118,7 +118,7 @@ require APP_DIR . '/vistas/admin-encabezado.php';
           <span class="item-code"><?= e($p['codigo']) ?> · <?= e($p['talla']) ?></span>
           <strong><?= e($p['nombre']) ?></strong>
           <span class="item-meta">
-            <?= $p['precio'] !== null ? e(precio($p['precio'])) : 'Sin precio' ?><?= $p['marca'] !== '' ? ' · ' . e($p['marca']) : '' ?>
+            <?= $p['precio'] !== null ? e(precio($p['precio'])) : 'Sin precio' ?><?= $p['marca'] !== '' ? ' · ' . e($p['marca']) : '' ?><?= piezas_disponibles($p) > 1 ? ' · <b class="piezas">' . e(texto_piezas($p['cantidad'])) . '</b>' : '' ?>
           </span>
           <?php if ($p['estado'] === 'apartado' && $p['apartado_en']): ?>
             <span class="item-note<?= $vencido ? ' bad' : '' ?>">Apartada <?= e(hace($p['apartado_en'])) ?><?= $vencido ? ' · ¡venció el plazo!' : '' ?></span>
@@ -127,14 +127,7 @@ require APP_DIR . '/vistas/admin-encabezado.php';
           <?php endif; ?>
         </span>
       </a>
-      <form class="states" method="post" action="/admin/accion.php">
-        <?= csrf_campo() ?>
-        <input type="hidden" name="id" value="<?= $p['id'] ?>">
-        <input type="hidden" name="volver" value="<?= e($aqui) ?>">
-        <button name="accion" value="disponible" class="st st-disp"<?= $p['estado'] === 'disponible' ? ' aria-pressed="true"' : '' ?>>Disponible</button>
-        <button name="accion" value="apartado" class="st st-apar"<?= $p['estado'] === 'apartado' ? ' aria-pressed="true"' : '' ?>>Apartada</button>
-        <button name="accion" value="vendido" class="st st-vend"<?= $p['estado'] === 'vendido' ? ' aria-pressed="true"' : '' ?>>Vendida</button>
-      </form>
+      <?php $volverA = $aqui; $ancho = false; require APP_DIR . '/vistas/botones-estado.php'; ?>
     </li>
   <?php endforeach; ?>
 </ul>

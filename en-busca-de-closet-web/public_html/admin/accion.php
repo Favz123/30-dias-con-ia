@@ -25,7 +25,37 @@ if (!$p) {
 }
 
 $ahora = ahora();
+$p = normaliza_prenda($p);
+
+// Varias piezas iguales: "Apartada" o "Vendida" se lleva UNA pieza y la prenda sigue
+// disponible con las demás. La última pieza cambia de estado como siempre.
+if (in_array($accion, ['apartado', 'vendido'], true) && $p['estado'] === 'disponible' && $p['cantidad'] > 1) {
+    $st = db()->prepare('UPDATE prendas SET cantidad = cantidad - 1, actualizado_en = :a WHERE id = :id AND cantidad > 1');
+    $st->execute([':a' => $ahora, ':id' => $id]);
+    $n = $p['cantidad'] - 1;
+    $quedan = $n === 1 ? 'Queda 1 pieza disponible' : "Quedan $n piezas disponibles";
+    aviso($accion === 'vendido'
+        ? "Se vendió 1 pieza de {$p['codigo']} 🎉 $quedan."
+        : "Se apartó 1 pieza de {$p['codigo']}. $quedan. Si el apartado se cancela, toca “+1”.");
+    redirigir($volver);
+}
+
 switch ($accion) {
+    case 'sumar':
+        // Llegó otra pieza igual (o se canceló un apartado de una de varias).
+        if ($p['estado'] === 'disponible') {
+            if ($p['cantidad'] >= MAX_PIEZAS) {
+                aviso("{$p['codigo']} ya tiene el máximo de " . MAX_PIEZAS . ' piezas.', 'error');
+                redirigir($volver);
+            }
+            $sql = 'UPDATE prendas SET cantidad = cantidad + 1, actualizado_en = :a WHERE id = :id';
+            $texto = "{$p['codigo']} ahora tiene " . texto_piezas($p['cantidad'] + 1) . ' disponibles.';
+        } else {
+            // Estaba apartada o vendida: la pieza nueva la vuelve a poner disponible.
+            $sql = "UPDATE prendas SET estado = 'disponible', cantidad = 1, apartado_en = NULL, vendido_en = NULL, actualizado_en = :a WHERE id = :id";
+            $texto = "{$p['codigo']} volvió a estar disponible con 1 pieza.";
+        }
+        break;
     case 'disponible':
         $sql = "UPDATE prendas SET estado = 'disponible', apartado_en = NULL, vendido_en = NULL, actualizado_en = :a WHERE id = :id";
         $texto = "{$p['codigo']} está disponible.";

@@ -39,6 +39,9 @@
       var may = limpio.toUpperCase();
       if (!r.talla && TALLAS.indexOf(may) !== -1) { r.talla = may; return; }
       if (!r.talla && ALIAS[may]) { r.talla = ALIAS[may]; return; }
+      // "x3" o "3pz" → 3 piezas iguales
+      var piezas = limpio.match(/^x(\d{1,2})$/i) || limpio.match(/^(\d{1,2})(?:pz|pzs|piezas?)$/i);
+      if (piezas && !r.cantidad && +piezas[1] >= 1) { r.cantidad = piezas[1]; return; }
       var precio = limpio.match(/^\$?(\d{2,6})(?:\.00)?$/);
       if (precio) { r.precio = precio[1]; return; }
       resto.push(t);
@@ -73,7 +76,7 @@
     encolarMiniatura(file, mini);
 
     var datos = analizar(file.name);
-    ['nombre', 'marca', 'precio'].forEach(function (c) {
+    ['nombre', 'marca', 'precio', 'cantidad'].forEach(function (c) {
       if (datos[c]) el.querySelector('[data-campo="' + c + '"]').value = datos[c];
     });
     if (datos.talla) elegirTalla(it, datos.talla);
@@ -201,7 +204,7 @@
     var datos = new FormData();
     datos.append('csrf', CSRF);
     datos.append('talla', it.talla);
-    ['nombre', 'marca', 'precio', 'detalle'].forEach(function (c) { datos.append(c, valor(it, c)); });
+    ['nombre', 'marca', 'precio', 'detalle', 'cantidad'].forEach(function (c) { datos.append(c, valor(it, c)); });
     try {
       var foto = await comprimir(it.file);
       datos.append('foto', foto, 'foto.jpg');

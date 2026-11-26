@@ -30,6 +30,9 @@ if (PHP_SAPI !== 'cli' && !headers_sent()) {
 mb_internal_encoding('UTF-8');
 
 /* ---------- Catálogo de tallas ---------- */
+/** Máximo de piezas iguales por prenda (misma foto, misma talla). */
+const MAX_PIEZAS = 99;
+
 const TALLAS = [
     'XCH' => ['slug' => 'extra-chica', 'nombre' => 'Extra chica'],
     'CH' => ['slug' => 'chica',       'nombre' => 'Chica'],
@@ -91,6 +94,7 @@ function crear_tablas(PDO $pdo, string $driver): void
             descripcion TEXT NOT NULL DEFAULT '',
             foto TEXT NOT NULL DEFAULT '',
             estado TEXT NOT NULL DEFAULT 'disponible',
+            cantidad INTEGER NOT NULL DEFAULT 1,
             apartado_en TEXT NULL,
             vendido_en TEXT NULL,
             creado_en TEXT NOT NULL,
@@ -104,6 +108,7 @@ function crear_tablas(PDO $pdo, string $driver): void
             clave_hash TEXT NOT NULL,
             creado_en TEXT NOT NULL
         )");
+        agregar_cantidad($pdo, 'INTEGER NOT NULL DEFAULT 1');
         return;
     }
     $pdo->exec("CREATE TABLE IF NOT EXISTS prendas (
@@ -117,6 +122,7 @@ function crear_tablas(PDO $pdo, string $driver): void
         descripcion TEXT NOT NULL,
         foto VARCHAR(60) NOT NULL DEFAULT '',
         estado VARCHAR(12) NOT NULL DEFAULT 'disponible',
+        cantidad SMALLINT UNSIGNED NOT NULL DEFAULT 1,
         apartado_en DATETIME NULL,
         vendido_en DATETIME NULL,
         creado_en DATETIME NOT NULL,
@@ -130,6 +136,17 @@ function crear_tablas(PDO $pdo, string $driver): void
         clave_hash VARCHAR(255) NOT NULL,
         creado_en DATETIME NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    agregar_cantidad($pdo, 'SMALLINT UNSIGNED NOT NULL DEFAULT 1');
+}
+
+/** Tiendas instaladas antes de las cantidades: agrega la columna una sola vez (cada prenda queda con 1 pieza). */
+function agregar_cantidad(PDO $pdo, string $tipo): void
+{
+    try {
+        $pdo->query('SELECT cantidad FROM prendas LIMIT 0');
+    } catch (PDOException $ex) {
+        $pdo->exec("ALTER TABLE prendas ADD COLUMN cantidad $tipo");
+    }
 }
 
 function ahora(): string
@@ -227,7 +244,19 @@ function normaliza_prenda(array $p): array
 {
     $p['precio'] = $p['precio'] === null ? null : (int) $p['precio'];
     $p['id'] = (int) $p['id'];
+    $p['cantidad'] = max(1, (int) ($p['cantidad'] ?? 1));
     return $p;
+}
+
+/** Piezas que se pueden pedir ahora: las de una prenda disponible; 0 si está apartada o vendida. */
+function piezas_disponibles(array $p): int
+{
+    return $p['estado'] === 'disponible' ? $p['cantidad'] : 0;
+}
+
+function texto_piezas(int $n): string
+{
+    return $n === 1 ? '1 pieza' : "$n piezas";
 }
 
 /* ---------- Sesión, CSRF y avisos (panel) ---------- */
@@ -629,7 +658,7 @@ function prenda_visible(array $p): bool
 }
 
 /* ---------- Alta y validación de prendas (formulario y carga masiva) ---------- */
-const CAMPOS_PRENDA = ['nombre', 'marca', 'talla', 'precio', 'detalle', 'descripcion'];
+const CAMPOS_PRENDA = ['nombre', 'marca', 'talla', 'precio', 'detalle', 'descripcion', 'cantidad'];
 
 function leer_campos_prenda(array $src): array
 {
@@ -639,6 +668,8 @@ function leer_campos_prenda(array $src): array
     }
     $f['talla'] = strtoupper($f['talla']);
     $f['precio'] = preg_replace('/[^\d]/', '', $f['precio']);
+    // Sin cantidad (formularios viejos o campo vacío) = 1 pieza.
+    $f['cantidad'] = $f['cantidad'] === '' ? '1' : $f['cantidad'];
     return $f;
 }
 
@@ -659,6 +690,9 @@ function validar_prenda(array $f): array
     }
     if ($f['precio'] !== '' && (int) $f['precio'] > 1000000) {
         $errores[] = 'Revisa el precio.';
+    }
+    if (!preg_match('/^\d{1,2}$/', $f['cantidad']) || (int) $f['cantidad'] < 1) {
+        $errores[] = 'Las piezas deben ser un número del 1 al ' . MAX_PIEZAS . '.';
     }
     return $errores;
 }
@@ -691,14 +725,15 @@ function crear_prenda(array $f, string $rutaFoto): string
     $ahora = ahora();
     $pdo->beginTransaction();
     try {
-        $pdo->prepare("INSERT INTO prendas (nombre, marca, talla, precio, detalle, descripcion, foto, estado, creado_en, actualizado_en)
-            VALUES (:nombre, :marca, :talla, :precio, :detalle, :descripcion, '', 'disponible', :creado, :act)")->execute([
+        $pdo->prepare("INSERT INTO prendas (nombre, marca, talla, precio, detalle, descripcion, foto, estado, cantidad, creado_en, actualizado_en)
+            VALUES (:nombre, :marca, :talla, :precio, :detalle, :descripcion, '', 'disponible', :cantidad, :creado, :act)")->execute([
             ':nombre' => $f['nombre'],
             ':marca' => $f['marca'],
             ':talla' => $f['talla'],
             ':precio' => $f['precio'] === '' ? null : (int) $f['precio'],
             ':detalle' => $f['detalle'],
             ':descripcion' => $f['descripcion'],
+            ':cantidad' => (int) $f['cantidad'],
             ':creado' => $ahora,
             ':act' => $ahora,
         ]);

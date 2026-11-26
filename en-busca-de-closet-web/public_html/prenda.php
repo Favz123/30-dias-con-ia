@@ -109,6 +109,7 @@ require APP_DIR . '/vistas/encabezado.php';
             <?php if ($p['marca'] !== ''): ?><span class="chip"><?= e($p['marca']) ?></span><?php endif; ?>
             <?php if ($p['detalle'] !== ''): ?><span class="chip"><?= e($p['detalle']) ?></span><?php endif; ?>
             <?php if ($p['estado'] === 'apartado'): ?><span class="chip warn">Apartada</span><?php endif; ?>
+            <?php if (piezas_disponibles($p) > 1): ?><span class="chip ok"><?= e(texto_piezas($p['cantidad'])) ?> disponibles</span><?php endif; ?>
           </div>
           <h1><?= e($p['nombre']) ?></h1>
           <p class="price"><?= $p['precio'] !== null ? e(precio($p['precio'])) : '<span class="price ask">Precio por WhatsApp</span>' ?></p>

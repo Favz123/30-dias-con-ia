@@ -276,6 +276,8 @@ section{padding:84px 0}
 .product-info .chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}
 .chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2px solid var(--lila-300);border-radius:999px;padding:.3em .9em;font-weight:800;font-size:.9rem}
 .chip.dark{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip.ok{background:#eafaf0;border-color:#7fd3a0;color:#17663a}
+.feature.stock{background:#eafaf0;color:#17663a}
 .chip.warn{background:#fff4e5;border-color:#f3b766;color:#8a4b00}
 .product-info p.desc{color:var(--muted);font-size:1.05rem}
 .product-info .btn-wa,.product-info .btn-off{font-size:1.1rem;padding:1em 1.4em;margin-top:8px}

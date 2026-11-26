@@ -71,6 +71,7 @@ if ($p['precio'] !== null) {
         'price' => $p['precio'],
         'priceCurrency' => 'MXN',
         'availability' => $disponibilidad,
+        'inventoryLevel' => ['@type' => 'QuantitativeValue', 'value' => $p['estado'] === 'disponible' ? $p['cantidad'] : 0],
         'itemCondition' => 'https://schema.org/NewCondition',
         'url' => producto_url($p, true),
         'seller' => ['@type' => 'Organization', 'name' => 'Punto Bonito'],
@@ -101,7 +102,7 @@ require APP_DIR . '/vistas/encabezado.php';
       <div class="product c-<?= e($categoriaP['color']) ?> estado-<?= e($p['estado']) ?>">
         <figure class="product-photo">
           <img src="<?= e(foto_url($p)) ?>" width="<?= $fotoAncho ?>" height="<?= $fotoAlto ?>" alt="<?= e(texto_alt($p)) ?>" fetchpriority="high">
-          <?php if ($p['estado'] !== 'disponible'): ?><span class="ribbon"><?= e(ESTADOS[$p['estado']]) ?></span><?php endif; ?>
+          <?php if ($p['estado'] !== 'disponible'): ?><span class="ribbon"><?= e(ESTADOS_TIENDA[$p['estado']]) ?></span><?php endif; ?>
           <figcaption><?= e($p['nombre']) ?> · Código <?= e($p['codigo']) ?></figcaption>
         </figure>
         <div class="product-info">
@@ -115,6 +116,11 @@ require APP_DIR . '/vistas/encabezado.php';
           <h1><?= e($p['nombre']) ?></h1>
           <p class="price"><?= $p['precio'] !== null ? e(precio($p['precio'])) : '<span class="price ask">Precio por WhatsApp</span>' ?></p>
           <p class="code">Código: <?= e($p['codigo']) ?></p>
+          <?php if ($p['estado'] === 'disponible'): ?>
+            <p class="stock grande<?= $p['cantidad'] <= 2 ? ' pocas' : '' ?>">Disponibles: <b><?= $p['cantidad'] ?></b><?= $p['cantidad'] === 1 ? ' · ¡es la última!' : '' ?></p>
+          <?php elseif ($p['estado'] === 'vendido'): ?>
+            <p class="stock grande agotado">Agotado</p>
+          <?php endif; ?>
           <?php if ($p['descripcion'] !== ''): ?><p class="desc"><?= nl2br(e($p['descripcion'])) ?></p><?php endif; ?>
 
           <?php require APP_DIR . '/vistas/botones.php'; ?>

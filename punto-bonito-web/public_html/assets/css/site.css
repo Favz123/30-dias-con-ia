@@ -427,3 +427,10 @@ section{padding:84px 0}
 .foot-cats{display:flex;flex-wrap:wrap;gap:6px 14px;max-width:420px}
 .foot-cats a{color:#f7d3e2;text-decoration:none;font-weight:700;font-size:.92rem}
 .foot-cats a:hover{color:var(--amarillo);text-decoration:underline}
+
+/* Existencias (cantidad de piezas iguales) */
+.stock{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;font-weight:800;font-size:.85rem;color:#2f6b3a;background:#eaf6ec;border-radius:999px;padding:.2em .8em;margin:2px 0 8px}
+.stock::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.stock.pocas{color:#8a4b00;background:#fff4e5}
+.stock.grande{font-size:1rem;margin:4px 0 12px}
+.stock.agotado{color:#7a1f2b;background:#fbe9ec}

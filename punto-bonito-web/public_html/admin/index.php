@@ -17,6 +17,7 @@ $diasApartado = (int) cfg('dias_apartado', 7);
 $limiteApartado = date('Y-m-d H:i:s', time() - $diasApartado * 86400);
 $st = db()->prepare("SELECT
     SUM(CASE WHEN estado = 'disponible' THEN 1 ELSE 0 END) AS disponibles,
+    SUM(CASE WHEN estado = 'disponible' THEN cantidad ELSE 0 END) AS piezas,
     SUM(CASE WHEN estado = 'apartado' THEN 1 ELSE 0 END) AS apartados,
     SUM(CASE WHEN estado = 'apartado' AND apartado_en < :lim_ap THEN 1 ELSE 0 END) AS vencidos,
     SUM(CASE WHEN estado = 'vendido' AND vendido_en >= :semana THEN 1 ELSE 0 END) AS vendidas_semana
@@ -60,6 +61,7 @@ function enlace_admin(array $cambios): string
     return '/admin/' . ($p ? '?' . http_build_query($p) : '');
 }
 $aqui = $_SERVER['REQUEST_URI'] ?? '/admin/';
+$repetidos = productos_repetidos();
 
 $titulo = 'Mis productos';
 require APP_DIR . '/vistas/admin-encabezado.php';
@@ -70,10 +72,30 @@ require APP_DIR . '/vistas/admin-encabezado.php';
 <a class="bulk-link" href="/admin/carga-masiva.php">📚 Subir varios productos a la vez</a>
 
 <section class="stats" aria-label="Resumen">
-  <a class="stat" href="<?= e(enlace_admin(['estado' => 'disponible', 'pagina' => 1])) ?>"><b><?= $resumen['disponibles'] ?? 0 ?></b><span>Disponibles</span></a>
+  <a class="stat" href="<?= e(enlace_admin(['estado' => 'disponible', 'pagina' => 1])) ?>"><b><?= $resumen['disponibles'] ?? 0 ?></b><span>Disponibles<?php if (($resumen['piezas'] ?? 0) > ($resumen['disponibles'] ?? 0)): ?> · <?= $resumen['piezas'] ?> piezas<?php endif; ?></span></a>
   <a class="stat amber" href="<?= e(enlace_admin(['estado' => 'apartado', 'pagina' => 1])) ?>"><b><?= $resumen['apartados'] ?? 0 ?></b><span>Apartados<?php if (!empty($resumen['vencidos'])): ?> · <em><?= $resumen['vencidos'] ?> vencidos</em><?php endif; ?></span></a>
   <a class="stat dark" href="<?= e(enlace_admin(['estado' => 'vendido', 'pagina' => 1])) ?>"><b><?= $resumen['vendidas_semana'] ?? 0 ?></b><span>Vendidos (7 días)</span></a>
 </section>
+
+<?php if ($repetidos): ?>
+  <section class="panel repetidos">
+    <h2>🔁 Posibles repetidos</h2>
+    <p class="hint">Estos productos tienen el mismo nombre, categoría y precio. Si son la misma pieza, únelos: queda <b>una sola foto</b> con la cantidad sumada y se borran las demás fichas.</p>
+    <ul>
+      <?php foreach ($repetidos as $g): ?>
+        <li>
+          <span><strong><?= e($g['nombre']) ?></strong> · <?= count($g['ids']) ?> fichas · <?= $g['piezas'] ?> piezas en total</span>
+          <form method="post" action="/admin/accion.php" data-confirm="¿Unir las <?= count($g['ids']) ?> fichas de “<?= e($g['nombre']) ?>” en una sola con <?= $g['piezas'] ?> piezas? Se conserva la más antigua y se borran las otras.">
+            <?= csrf_campo() ?>
+            <input type="hidden" name="ids" value="<?= e(implode(',', $g['ids'])) ?>">
+            <input type="hidden" name="volver" value="<?= e($aqui) ?>">
+            <button class="btn primary" name="accion" value="unir">Unir en 1 con <?= $g['piezas'] ?> piezas</button>
+          </form>
+        </li>
+      <?php endforeach; ?>
+    </ul>
+  </section>
+<?php endif; ?>
 
 <form class="filters" method="get" action="/admin/">
   <input type="search" name="q" value="<?= e($q) ?>" placeholder="Buscar código, nombre o color" aria-label="Buscar">
@@ -137,6 +159,14 @@ require APP_DIR . '/vistas/admin-encabezado.php';
         <button name="accion" value="disponible" class="st st-disp"<?= $p['estado'] === 'disponible' ? ' aria-pressed="true"' : '' ?>>Disponible</button>
         <button name="accion" value="apartado" class="st st-apar"<?= $p['estado'] === 'apartado' ? ' aria-pressed="true"' : '' ?>>Apartado</button>
         <button name="accion" value="vendido" class="st st-vend"<?= $p['estado'] === 'vendido' ? ' aria-pressed="true"' : '' ?>>Vendido</button>
+      </form>
+      <form class="qty-row" method="post" action="/admin/accion.php">
+        <?= csrf_campo() ?>
+        <input type="hidden" name="id" value="<?= $p['id'] ?>">
+        <input type="hidden" name="volver" value="<?= e($aqui) ?>">
+        <button class="btn" name="accion" value="vender_uno"<?= $p['estado'] === 'vendido' ? ' disabled' : '' ?>>− Vendí 1</button>
+        <span><?= $p['estado'] === 'vendido' ? 'Agotado' : e(texto_existencias($p)) ?></span>
+        <button class="btn" name="accion" value="sumar_uno">+ Llegó 1</button>
       </form>
     </li>
   <?php endforeach; ?>

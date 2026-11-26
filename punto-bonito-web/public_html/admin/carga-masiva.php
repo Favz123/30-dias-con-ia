@@ -16,7 +16,8 @@ require APP_DIR . '/vistas/admin-encabezado.php';
     </label>
     <details class="tips">
       <summary>💡 Tip: nombra las fotos y se llenan solas</summary>
-      <p>Si el archivo se llama, por ejemplo, <b>Bolso tejido rosa - 350.jpg</b>, se llenan solos la categoría (por la primera palabra: bolso, taza, termo…), el color, el nombre y el precio. También sirve la clave al inicio: <b>BOL - Bolso tejido rosa - 350.jpg</b>.</p>
+      <p>Si el archivo se llama, por ejemplo, <b>Bolso tejido rosa - 350.jpg</b>, se llenan solos la categoría (por la primera palabra: bolso, taza, termo…), el color, el nombre y el precio. También sirve la clave al inicio: <b>BOL - Bolso tejido rosa - 350.jpg</b>. Si tienes varias iguales, agrega <b>x3</b> (o <b>3pz</b>): <b>Taza corazón - 120 x3.jpg</b>.</p>
+      <p><b>Varias piezas iguales = una sola foto.</b> Sube una foto y pon cuántas piezas hay en “Piezas”.</p>
       <p>Desde <b>Google Drive</b>: en la computadora, descarga la carpeta (se baja como ZIP), descomprímela y aquí selecciona todas las fotos con Ctrl+A. En el celular, al elegir fotos toca “Explorar” o “Archivos” y entra a Drive.</p>
     </details>
   </section>
@@ -34,6 +35,7 @@ require APP_DIR . '/vistas/admin-encabezado.php';
       <label>Color <input data-todas="color" list="colores" placeholder="Rosa"></label>
       <label>Precio ($) <input data-todas="precio" inputmode="numeric" placeholder="250"></label>
     </div>
+    <label>Piezas de cada una <input data-todas="cantidad" type="number" min="1" max="<?= CANTIDAD_MAXIMA ?>" inputmode="numeric" placeholder="1"></label>
     <label>Detalle <input data-todas="detalle" list="detalles" placeholder="Ej. Hecho a mano"></label>
     <button class="btn block" type="button" data-aplicar>Aplicar a las que estén vacías</button>
   </section>
@@ -61,6 +63,7 @@ require APP_DIR . '/vistas/admin-encabezado.php';
           <input data-campo="color" list="colores" placeholder="Color" maxlength="60" aria-label="Color">
           <input data-campo="precio" inputmode="numeric" placeholder="Precio" aria-label="Precio">
         </div>
+        <label class="lote-piezas">Piezas <input data-campo="cantidad" type="number" min="1" max="<?= CANTIDAD_MAXIMA ?>" inputmode="numeric" placeholder="1" aria-label="Cantidad de piezas"></label>
         <input data-campo="detalle" list="detalles" placeholder="Detalle (opcional)" maxlength="60" aria-label="Detalle">
         <p class="lote-estado" data-estado></p>
       </div>
@@ -77,5 +80,5 @@ foreach (CATEGORIAS as $clave => $t) {
 ?>
 <script>window.PB_COLORES = <?= json_encode(colores_sugeridos(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
 window.PB_CATEGORIAS = <?= json_encode($palabras, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;</script>
-<script src="/admin/carga-masiva.js?v=1" defer></script>
+<script src="/admin/carga-masiva.js?v=2" defer></script>
 <?php require APP_DIR . '/vistas/admin-pie.php';

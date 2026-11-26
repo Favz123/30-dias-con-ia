@@ -45,6 +45,9 @@
       var limpio = t.replace(/[,;]$/, '');
       var may = limpio.toUpperCase();
       if (!r.categoria && limpio === may && CATEGORIAS.indexOf(may) !== -1) { r.categoria = may; return; }
+      // "x3", "3pz" o "3pzas": cuántas piezas iguales hay.
+      var piezas = limpio.match(/^(?:x(\d{1,3})|(\d{1,3})(?:pz|pzs|pza|pzas|piezas))$/i);
+      if (piezas) { r.cantidad = piezas[1] || piezas[2]; return; }
       var precio = limpio.match(/^\$?(\d{2,6})(?:\.00)?$/);
       if (precio) { r.precio = precio[1]; return; }
       resto.push(t);
@@ -86,7 +89,7 @@
     encolarMiniatura(file, mini);
 
     var datos = analizar(file.name);
-    ['nombre', 'color', 'precio'].forEach(function (c) {
+    ['nombre', 'color', 'precio', 'cantidad'].forEach(function (c) {
       if (datos[c]) el.querySelector('[data-campo="' + c + '"]').value = datos[c];
     });
     if (datos.categoria) elegirCategoria(it, datos.categoria);
@@ -215,6 +218,7 @@
     datos.append('csrf', CSRF);
     datos.append('categoria', it.categoria);
     ['nombre', 'color', 'precio', 'detalle'].forEach(function (c) { datos.append(c, valor(it, c)); });
+    datos.append('cantidad', valor(it, 'cantidad') || '1');
     try {
       var foto = await comprimir(it.file);
       datos.append('foto', foto, 'foto.jpg');

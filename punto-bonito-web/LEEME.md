@@ -26,9 +26,18 @@ Catálogo de **Punto Bonito** (bolsos, monederos, cosmetiqueras, lapiceras, taza
 
 > Las preguntas frecuentes son generales (no dan montos ni plazos). Conviene ajustarlas a las reglas reales de la tienda.
 
+### Varias piezas del mismo producto
+
+Si llegan varias piezas iguales, se sube **una sola foto** y en “Cantidad (piezas iguales)” se pone cuántas son. En la tienda sale “Disponibles: N”.
+
+- En la lista del panel, **− Vendí 1** resta una pieza; al vender la última, el producto pasa solo a “Agotado”. **+ Llegó 1** suma una (y si estaba agotado, lo vuelve a poner disponible).
+- Si una clienta aparta una de varias piezas, usa **− Vendí 1** (o baja la cantidad) en lugar de “Apartado”, para que las demás sigan a la venta.
+- Si ya habías subido el mismo producto varias veces, arriba de la lista aparece **🔁 Posibles repetidos** (mismo nombre, categoría y precio). “Unir” deja una sola ficha, la más antigua, con las piezas sumadas, y borra las demás.
+- La columna `cantidad` se crea sola en la base de datos la primera vez que se abre el sitio con esta versión.
+
 ### Subir varias fotos a la vez
 
-En **Subir varios productos**, si el archivo se llama `Bolso tejido rosa - 350.jpg`, se llenan solos la categoría (por la palabra “bolso”), el color, el nombre y el precio. También sirve la clave al inicio: `BOL - Bolso tejido rosa - 350.jpg`.
+En **Subir varios productos**, si el archivo se llama `Bolso tejido rosa - 350.jpg`, se llenan solos la categoría (por la palabra “bolso”), el color, el nombre y el precio. También sirve la clave al inicio: `BOL - Bolso tejido rosa - 350.jpg`. Para varias piezas iguales agrega `x3` o `3pz`: `Taza corazón - 120 x3.jpg`.
 
 Claves: BOL Bolsos · MON Monederos · COS Cosmetiqueras · LAP Lapiceras · TAZ Tazas · TER Termos · VAS Vasos · LLA Llaveros · PLU Plumas · ARE Aretes · ESP Espejos · MAN Mandiles.
 

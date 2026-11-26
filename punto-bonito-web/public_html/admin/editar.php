@@ -30,6 +30,7 @@ $f = [
     'precio' => isset($p['precio']) ? (string) $p['precio'] : '',
     'detalle' => $p['detalle'] ?? '',
     'descripcion' => $p['descripcion'] ?? '',
+    'cantidad' => isset($p['cantidad']) ? (string) max(1, $p['cantidad']) : '1',
 ];
 $errores = [];
 
@@ -50,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':precio' => $f['precio'] === '' ? null : (int) $f['precio'],
             ':detalle' => $f['detalle'],
             ':descripcion' => $f['descripcion'],
+            ':cantidad' => (int) $f['cantidad'],
             ':act' => $ahora,
         ];
         $pdo = db();
@@ -57,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($p) {
                 $nuevaFoto = $hayFoto ? guardar_foto($archivo['tmp_name'], $p['codigo'], $f['nombre']) : null;
                 $sql = 'UPDATE productos SET nombre = :nombre, color = :color, categoria = :categoria, precio = :precio,
-                        detalle = :detalle, descripcion = :descripcion, actualizado_en = :act'
+                        detalle = :detalle, descripcion = :descripcion, cantidad = :cantidad, actualizado_en = :act'
                     . ($nuevaFoto ? ', foto = :foto' : '') . ' WHERE id = :id';
                 $datos[':id'] = $p['id'];
                 if ($nuevaFoto) {
@@ -135,6 +137,11 @@ require APP_DIR . '/vistas/admin-encabezado.php';
     </label>
   </div>
 
+  <label>Cantidad (piezas iguales)
+    <input class="qty" name="cantidad" type="number" min="1" max="<?= CANTIDAD_MAXIMA ?>" step="1" value="<?= e($f['cantidad']) ?>" inputmode="numeric" required>
+    <small class="hint">Si te llegaron varias iguales, sube una sola foto y pon aquí cuántas son.</small>
+  </label>
+
   <label>Detalle destacado <small>(opcional)</small>
     <input name="detalle" value="<?= e($f['detalle']) ?>" maxlength="60" list="detalles" placeholder="Ej. Hecho a mano">
     <datalist id="detalles"><option value="Hecho a mano"><option value="Pieza única"><option value="Personalizable"><option value="Con cierre"><option value="Térmico"><option value="Incluye caja de regalo"><option value="Edición limitada"></datalist>
@@ -154,7 +161,14 @@ require APP_DIR . '/vistas/admin-encabezado.php';
 
 <?php if ($p): ?>
   <section class="panel danger-zone">
-    <h2>Estado actual: <?= e(ESTADOS[$p['estado']]) ?></h2>
+    <h2>Estado actual: <?= e(ESTADOS[$p['estado']]) ?><?= $p['estado'] !== 'vendido' ? ' · ' . e(texto_existencias($p)) : '' ?></h2>
+    <form method="post" action="/admin/accion.php" class="qty-row">
+      <?= csrf_campo() ?>
+      <input type="hidden" name="id" value="<?= $p['id'] ?>">
+      <input type="hidden" name="volver" value="<?= e('/admin/editar.php?id=' . $p['id']) ?>">
+      <button class="btn" name="accion" value="vender_uno"<?= $p['estado'] === 'vendido' ? ' disabled' : '' ?>>− Vendí 1</button>
+      <button class="btn" name="accion" value="sumar_uno">+ Llegó 1</button>
+    </form>
     <form method="post" action="/admin/accion.php" class="states wide">
       <?= csrf_campo() ?>
       <input type="hidden" name="id" value="<?= $p['id'] ?>">

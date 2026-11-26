@@ -13,7 +13,7 @@ $h = 'h' . max(2, min(4, (int) ($nivelTitulo ?? 3)));
     <span class="tag"><?= e($categoriaP['icono'] . ' ' . $categoriaP['singular']) ?></span>
     <?php if ($p['color'] !== ''): ?><span class="tag size"><?= e($p['color']) ?></span><?php endif; ?>
     <?php if (es_nuevo($p)): ?><span class="tag nuevo">✨ Nuevo</span><?php endif; ?>
-    <?php if ($p['estado'] !== 'disponible'): ?><span class="ribbon"><?= e(ESTADOS[$p['estado']]) ?></span><?php endif; ?>
+    <?php if ($p['estado'] !== 'disponible'): ?><span class="ribbon"><?= e(ESTADOS_TIENDA[$p['estado']]) ?></span><?php endif; ?>
   </a>
   <div class="card-body">
     <<?= $h ?> class="card-title"><a href="<?= e(producto_url($p)) ?>"><?= e($p['nombre']) ?></a></<?= $h ?>>
@@ -25,6 +25,7 @@ $h = 'h' . max(2, min(4, (int) ($nivelTitulo ?? 3)));
       <?php endif; ?>
       <span class="code"><?= e($p['codigo']) ?></span>
     </div>
+    <?php if ($p['estado'] === 'disponible' && $p['cantidad'] > 1): ?><span class="stock<?= $p['cantidad'] <= 2 ? ' pocas' : '' ?>"><?= e(texto_existencias($p)) ?></span><?php endif; ?>
     <?php if ($p['detalle'] !== ''): ?><span class="feature"><?= e($p['detalle']) ?></span><?php endif; ?>
     <?php require APP_DIR . '/vistas/botones.php'; ?>
   </div>

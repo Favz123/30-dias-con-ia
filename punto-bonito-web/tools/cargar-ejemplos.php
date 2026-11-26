@@ -21,6 +21,8 @@ $productos = [
     ['Termo negro 500 ml', 'Negro', 'TER', 260, 'Térmico', 'Foto de prueba.', 'polo-nike-negra-xg.webp'],
     ['Aretes coral', 'Naranja', 'ARE', 90, 'Edición limitada', 'Foto de prueba.', 'short-nike-negro-coral-g.webp'],
     ['Mandil negro de cocina', 'Negro', 'MAN', 180, '', 'Foto de prueba.', 'biker-nike-negro-ch.webp'],
+    // Repetido a propósito: aparece en "Posibles repetidos" del panel para probar "Unir".
+    ['Taza floral', 'Floral', 'TAZ', 140, 'Personalizable', 'Foto de prueba (repetida).', 'top-nike-pro-rosa-ch.webp'],
 ];
 $pdo = db();
 foreach ($productos as $i => [$nombre, $color, $categoria, $precio, $detalle, $desc, $foto]) {
@@ -37,4 +39,7 @@ foreach ($productos as $i => [$nombre, $color, $categoria, $precio, $detalle, $d
 // Un apartado y un vendido, para ver cómo se ven.
 $pdo->exec("UPDATE productos SET estado = 'apartado', apartado_en = '" . ahora() . "' WHERE codigo = 'BOL-0002'");
 $pdo->exec("UPDATE productos SET estado = 'vendido', vendido_en = '" . ahora() . "' WHERE codigo = 'MON-0007'");
+// Varias piezas iguales de un mismo producto.
+$pdo->exec("UPDATE productos SET cantidad = 5 WHERE codigo = 'TER-0010'");
+$pdo->exec("UPDATE productos SET cantidad = 2 WHERE codigo = 'COS-0008'");
 echo "Listo. Son productos de PRUEBA con fotos de ropa; los precios son de ejemplo.\n";

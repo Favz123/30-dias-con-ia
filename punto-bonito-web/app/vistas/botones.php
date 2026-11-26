@@ -19,5 +19,5 @@
     <a class="btn btn-info" style="grid-column:1/-1" href="<?= e(whatsapp_link(mensaje_producto($p, 'info'))) ?>" target="_blank" rel="noopener">💬 ¿Tienen otro igual?</a>
   </div>
 <?php else: ?>
-  <span class="btn btn-off" aria-disabled="true">¡Ya se vendió!</span>
+  <span class="btn btn-off" aria-disabled="true">¡Se agotó!</span>
 <?php endif; ?>

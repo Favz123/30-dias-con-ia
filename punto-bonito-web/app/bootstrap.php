@@ -63,6 +63,31 @@ const CATEGORIAS = [
               'descripcion' => 'Mandiles de cocina bonitos y resistentes, para cocinar, hornear o atender tu negocio con estilo.'],
 ];
 const ESTADOS = ['disponible' => 'Disponible', 'apartado' => 'Apartado', 'vendido' => 'Vendido'];
+// Cómo se ve cada estado en la tienda. "Agotado" sirve igual para una pieza que para varias.
+const ESTADOS_TIENDA = ['disponible' => 'Disponible', 'apartado' => 'Apartado', 'vendido' => 'Agotado'];
+
+/** Texto de existencias para la tienda: "3 disponibles", "1 disponible". */
+function texto_existencias(array $p): string
+{
+    return $p['cantidad'] === 1 ? '1 disponible' : $p['cantidad'] . ' disponibles';
+}
+
+/**
+ * Posibles productos repetidos: disponibles con el mismo nombre, categoría y precio.
+ * Devuelve grupos ['nombre', 'categoria', 'precio', 'ids' => [..], 'piezas' => total].
+ */
+function productos_repetidos(): array
+{
+    $filas = db()->query("SELECT id, nombre, categoria, precio, cantidad FROM productos WHERE estado = 'disponible' ORDER BY id")->fetchAll();
+    $grupos = [];
+    foreach ($filas as $f) {
+        $clave = mb_strtolower(trim(preg_replace('/\s+/', ' ', $f['nombre']))) . '|' . $f['categoria'] . '|' . ($f['precio'] ?? '');
+        $grupos[$clave] ??= ['nombre' => $f['nombre'], 'categoria' => $f['categoria'], 'precio' => $f['precio'] === null ? null : (int) $f['precio'], 'ids' => [], 'piezas' => 0];
+        $grupos[$clave]['ids'][] = (int) $f['id'];
+        $grupos[$clave]['piezas'] += max(1, (int) $f['cantidad']);
+    }
+    return array_values(array_filter($grupos, fn ($g) => count($g['ids']) > 1));
+}
 
 function categoria_por_slug(string $slug): ?string
 {
@@ -112,6 +137,7 @@ function crear_tablas(PDO $pdo, string $driver): void
             color TEXT NOT NULL DEFAULT '',
             categoria TEXT NOT NULL,
             precio INTEGER NULL,
+            cantidad INTEGER NOT NULL DEFAULT 1,
             detalle TEXT NOT NULL DEFAULT '',
             descripcion TEXT NOT NULL DEFAULT '',
             foto TEXT NOT NULL DEFAULT '',
@@ -129,6 +155,7 @@ function crear_tablas(PDO $pdo, string $driver): void
             clave_hash TEXT NOT NULL,
             creado_en TEXT NOT NULL
         )");
+        agregar_columnas($pdo, $driver);
         return;
     }
     $pdo->exec("CREATE TABLE IF NOT EXISTS productos (
@@ -138,6 +165,7 @@ function crear_tablas(PDO $pdo, string $driver): void
         color VARCHAR(60) NOT NULL DEFAULT '',
         categoria VARCHAR(3) NOT NULL,
         precio INT UNSIGNED NULL,
+        cantidad INT UNSIGNED NOT NULL DEFAULT 1,
         detalle VARCHAR(60) NOT NULL DEFAULT '',
         descripcion TEXT NOT NULL,
         foto VARCHAR(60) NOT NULL DEFAULT '',
@@ -155,6 +183,23 @@ function crear_tablas(PDO $pdo, string $driver): void
         clave_hash VARCHAR(255) NOT NULL,
         creado_en DATETIME NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    agregar_columnas($pdo, $driver);
+}
+
+/**
+ * Columnas agregadas después de instalar el sitio: se crean solas la primera vez que
+ * hacen falta, sin tocar los productos que ya existen (todos quedan con cantidad 1).
+ */
+function agregar_columnas(PDO $pdo, string $driver): void
+{
+    $columnas = $driver === 'sqlite'
+        ? array_column($pdo->query('PRAGMA table_info(productos)')->fetchAll(), 'name')
+        : $pdo->query('SHOW COLUMNS FROM productos')->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('cantidad', $columnas, true)) {
+        $pdo->exec($driver === 'sqlite'
+            ? 'ALTER TABLE productos ADD COLUMN cantidad INTEGER NOT NULL DEFAULT 1'
+            : 'ALTER TABLE productos ADD COLUMN cantidad INT UNSIGNED NOT NULL DEFAULT 1 AFTER precio');
+    }
 }
 
 function ahora(): string
@@ -286,6 +331,7 @@ function normaliza_producto(array $p): array
 {
     $p['precio'] = $p['precio'] === null ? null : (int) $p['precio'];
     $p['id'] = (int) $p['id'];
+    $p['cantidad'] = max(0, (int) ($p['cantidad'] ?? 1));
     return $p;
 }
 
@@ -736,7 +782,8 @@ function producto_visible(array $p): bool
 }
 
 /* ---------- Alta y validación de productos (formulario y carga masiva) ---------- */
-const CAMPOS_PRODUCTO = ['nombre', 'color', 'categoria', 'precio', 'detalle', 'descripcion'];
+const CAMPOS_PRODUCTO = ['nombre', 'color', 'categoria', 'precio', 'cantidad', 'detalle', 'descripcion'];
+const CANTIDAD_MAXIMA = 999;
 
 function leer_campos_producto(array $src): array
 {
@@ -746,6 +793,8 @@ function leer_campos_producto(array $src): array
     }
     $f['categoria'] = strtoupper($f['categoria']);
     $f['precio'] = preg_replace('/[^\d]/', '', $f['precio']);
+    $f['cantidad'] = preg_replace('/[^\d]/', '', $f['cantidad']);
+    $f['cantidad'] = $f['cantidad'] === '' ? '1' : $f['cantidad'];
     return $f;
 }
 
@@ -763,6 +812,9 @@ function validar_producto(array $f): array
     }
     if (mb_strlen($f['descripcion']) > 1000) {
         $errores[] = 'La descripción es muy larga (máximo 1000 letras).';
+    }
+    if ((int) $f['cantidad'] < 1 || (int) $f['cantidad'] > CANTIDAD_MAXIMA) {
+        $errores[] = 'La cantidad debe ser de 1 a ' . CANTIDAD_MAXIMA . ' piezas.';
     }
     if ($f['precio'] !== '' && (int) $f['precio'] > 1000000) {
         $errores[] = 'Revisa el precio.';
@@ -798,12 +850,13 @@ function crear_producto(array $f, string $rutaFoto): string
     $ahora = ahora();
     $pdo->beginTransaction();
     try {
-        $pdo->prepare("INSERT INTO productos (nombre, color, categoria, precio, detalle, descripcion, foto, estado, creado_en, actualizado_en)
-            VALUES (:nombre, :color, :categoria, :precio, :detalle, :descripcion, '', 'disponible', :creado, :act)")->execute([
+        $pdo->prepare("INSERT INTO productos (nombre, color, categoria, precio, cantidad, detalle, descripcion, foto, estado, creado_en, actualizado_en)
+            VALUES (:nombre, :color, :categoria, :precio, :cantidad, :detalle, :descripcion, '', 'disponible', :creado, :act)")->execute([
             ':nombre' => $f['nombre'],
             ':color' => $f['color'],
             ':categoria' => $f['categoria'],
             ':precio' => $f['precio'] === '' ? null : (int) $f['precio'],
+            ':cantidad' => (int) $f['cantidad'],
             ':detalle' => $f['detalle'],
             ':descripcion' => $f['descripcion'],
             ':creado' => $ahora,
